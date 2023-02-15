@@ -57,7 +57,7 @@ qb                   = area(Nc).*qb*AREA;
 Sx                   = Sx-Smax;
 Sx(Sx<0)             = 0;
 %hydraulic radius for channel class
-Ss                   = Sx./cW(Nc);
+Ss                   = Sx./cW(Nc)*cs;
 R                    = Ss.*cW(Nc)./(2*Ss+cW(Nc));
 %manning's velocity
 v                    = R.^(2/3).*SINb(Nc).^(1/2)./mannN(Nc);
@@ -158,19 +158,20 @@ qx                = w5.*SD + (1-w5).*Sx;
 %                       surface inflows and outflows
 %--------------------------------------------------------------------------
 %scale surface excess to acount for variable channel width(only in channel HSUs)
-Ss                = Sx./cW;
+%hilslope cW is set equal to cs, so no scaling happens there
+Ss                = Sx*cs./cW;
 %hydraulic radius for channel HSUs (assuming rectangular channel)
 R                 = Ss.*cW./(2*Ss+cW);
 %hydraulic radius for hillslope HSUs
-R(1:Nc-Nr)        = Sx(1:Nc-Nr);
+R(1:Nc-Nr)        = Ss(1:Nc-Nr);
 %overland flow diffusion
-dSxi              = repmat(Ss',Nc,1)-Ss;
+dSxi              = repmat(Sx',Nc,1)-Sx;
 dSxdx             = sum(D.*dSxi,2)./cs;
 %diffusion flux
 flxx              = SINb - COSb.*dSxdx;
 %determine the sign (+:downslope, -:upslope)
 wx                = stepfun(flxx,0,e);
-%downslope flow flux
+%Manning's n downslope flow flux (v*depth/grid resolution)
 qoD               = wx.*R.^(2/3).*flxx.^(1/2)./mannN.*Sx./cs;
 %upslope flow flux 
 qoU               = (1-wx).*R.^(2/3).*abs(flxx).^(1/2)./mannN.*Sx./cs;

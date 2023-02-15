@@ -1,5 +1,5 @@
 function [WxmD,WxmU,WbmD,WbmU,D,SINa,SINb,COSa,COSb,areaf,AREA,Nc,Nr,HSUs...
-           ,cs,DEMx,cW]=Preprocess_DEM(catchname,CHthresh,Href,Athresh,cs,ISOBASINS,DIFFUSION,TI_bins)
+           ,cs,DEMx,cW]=Preprocess_DEM(catchname,CHthresh,Href,Athresh,cs,ISOBASINS,DIFFUSION,TI_bins,outletW)
 warning('off','all');
 %--------------------------------------------------------------------------
 %                                 load DEM 
@@ -96,7 +96,7 @@ TpInd(betaD<=0.01)   = MAX;
 %--------------------------------------------------------------------------
 %obtain class IDs and related slope informaiton
 [HSUs,SINa,SINb,COSa,COSb,areaf,AREA,Nc,Nr,cW] = define_HSUs(TpInd,TI_bins...
-    ,DEMx,B,R,NB,betaD,alphaD,cs,Axs,ch);
+    ,DEMx,B,R,NB,betaD,alphaD,cs,Axs,ch,outletW);
 %--------------------------------------------------------------------------
 %                              diffusion matrix
 %--------------------------------------------------------------------------
@@ -183,7 +183,7 @@ for ii      = 1:Nc
     D(:,ii) = counts./sum(counts+eps);
 end
 %**************************************************************************
-function [HSUs,SINa,SINb,COSa,COSb,areaf,AREA,Nc,NR,cW]=define_HSUs(TpInd,edgB,DEM,B,R,NB,beta,alpha,cs,As,ch)
+function [HSUs,SINa,SINb,COSa,COSb,areaf,AREA,Nc,NR,cW]=define_HSUs(TpInd,edgB,DEM,B,R,NB,beta,alpha,cs,As,ch,outletW)
 %assign a new ID for reaches in different isobasins to avoid having non unique HSU IDs
 PRIMES         = primes(1e8);
 PRIMES(1:100)  = [];
@@ -227,7 +227,8 @@ for ii = 1:nc
             HSUs(cond)=ID;
             %define class width for manning's scaling
             %hilslope classes don't get scaled for width(channel will)
-            cW(ID,1)=1;
+            %their width is equal to DEM resolution
+            cW(ID,1)=cs;
         end
     end
 end
@@ -245,7 +246,7 @@ if NR>0
       %based on Width~Q^0.5
       % we scale them based on outlet: if outlet is 5m then everything else
       % must slightly narrower than the outlet
-      cW(ID,1)=5*( mean(As(cond)./areaMAX) ).^0.5;
+      cW(ID,1)=outletW*( mean(As(cond)./areaMAX) ).^0.5;
     end
   end
   %-------------------
@@ -257,7 +258,7 @@ Nc            = Nc+1;
 %add one for outlet
 NR            = NR+1;
 %set outlet width
-cW(Nc,1)      = 1;
+cW(Nc,1)      = outletW;
 %update TPIND map
 HSUs(outlet) = Nc;
 %calculate mean slopes for each class
@@ -294,7 +295,7 @@ W       = zeros(Nc,Nc);
 %subsurface isn't bound by the same topographic focusing as the surface
 %so it can give flow to other HSUs whether inside the same iso-basin or not
 for ii=1:length(ix)
-  W( TWI(ix(ii)),TWI(jy(ii)) )= W( TWI(ix(ii)),TWI(jy(ii)) ) +  M( ix(ii),jy(ii) );
+  W( TWI(ix(ii)),TWI(jy(ii)) ) = W( TWI(ix(ii)),TWI(jy(ii)) ) +  M( ix(ii),jy(ii) );
 end
 %sum of weights should add up to one
 SUM        = sum(W,2);

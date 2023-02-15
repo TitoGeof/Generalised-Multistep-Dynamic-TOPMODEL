@@ -37,6 +37,7 @@ Athresh     = 2000; %iso-basin area threshold [m^2]: this value should be
 %a day or two. But it is part of the DEM pre-processing and only needs to run once.
 %--------------------------------------------------------------------------
 CHthresh    = 200; %channel initiation area threshold [m^2]
+outletW     = 2;   %catchment outlet width [m]
 %--------------------------------------------------------------------------
 cs          = 2; %DEM cellsize [m]; resolution of DEM raster
 %--------------------------------------------------------------------------
@@ -47,9 +48,9 @@ PARAMset(1) = 75;
 %maximum transmissivity (at saturation), Tmax [m2/s]
 PARAMset(2) = 1e-4;
 %maximum daily evaporation rate, averaged across a year, ep [m/day]
-PARAMset(3) = 0.001;
+PARAMset(3) = 0.004;
 %maximum root-zone storage, Smax [m]
-PARAMset(4) = 0.0017;
+PARAMset(4) = 0.02;
 %hilslope Manning's n_{hs} [s/m^(1/3)] 
 PARAMset(5) = 0.05;
 %channels Manning's n_{ch} [s/m^(1/3)]
@@ -80,7 +81,7 @@ load([pwd '\DATA\' 'obsData' catchname],'DT','obsQ','DTR','obsR','yyyymmddHH0');
 %are turned 'on'. After that, load values from disk for future simulations of you catchment.
 
 % [WxmD,WxmU,WbmD,WbmU,D,SINa,SINb,COSa,COSb,areaf,AREA,Nc,Nr,TPIND,cs,DEM,cW]...
-%     =Preprocess_DEM(catchname,CHthresh,Href,Athresh,cs,ISOBASINS,DIFFUSION,TI_bins);
+%     =Preprocess_DEM(catchname,CHthresh,Href,Athresh,cs,ISOBASINS,DIFFUSION,TI_bins,outletW);
 
 NAME = [catchname num2str(Href) '_' num2str(Athresh) 'DEM_PRE_PROCESS'];
 % save([pwd '\DATA\' NAME '.mat'],'areaf','AREA','WxmD','WxmU','WbmD','WbmU','SINa','SINb','COSa','COSb','cs','TPIND','Nr','Nc','DEM','D','cW')
@@ -108,7 +109,7 @@ obsR    = obsR./dTime*60*60*1000;
 TITLE=['catchment:' num2str(AREA/1e6) 'km^2' '  |  ' '#HSUs:' num2str(Nc) '  |  ' 'runtime:' num2str(round(simTime)) 's' '  |  ' 'NSE_H:' num2str(round(ofsALL(1)*100)) '%' ...
   '  |  ' 'NSE_L:' num2str(round(ofsALL(2)*100)) '%' '  |  ' 'PME:' num2str(round(ofsALL(3))) '%' '  |  ' 'PTE:' num2str(round(ofsALL(4))) 'mins'];
 %--------------------
-figure(200)
+figure(201)
 clf
 %--------------------
 hh1=subplot(3,1,1:2);
