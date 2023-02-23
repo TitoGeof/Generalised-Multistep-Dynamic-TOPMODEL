@@ -14,8 +14,9 @@ catchname   = 'nog12_'; %cacthment file name (your DEM should be a .TIFF file ca
 % model should be in path=[pwd '\DATA\'].
 %--------------------------------------------------------------------------
 DIFFUSION='off'; % 'on' or 'off'. DIFFUSION: if 'on' diffusion flow routing
-%is performed on both hillslope and channel HSUs. if 'off', kinemativ wave
-%routing is excecuted
+%is performed on both hillslope and channel HSUs. if 'off', kinematic wave
+%routing is excecuted (if turned on or off, the "Preprocess_DEM" routine needds
+%to be performed again, to make sure diffusion matrix is included/excluded)
 %--------------------------------------------------------------------------
 Href        = 0.5; %reference head-drop along flow path path [m] (for calculating 
 %subsurface hydraulic gradient) it is catchment-specific. Refer to the model
