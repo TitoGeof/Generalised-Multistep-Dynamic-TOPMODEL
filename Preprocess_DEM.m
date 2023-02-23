@@ -20,9 +20,13 @@ FDxs                 = FLOWobj(DEMx,'type','single','preprocess','fill');
 % %multiple flow direction fo surface [object]
 FDxm                 = FLOWobj(DEMx,'type','multi','preprocess','fill');
 %multiple flow direction flow matrix for surface in downslope direction
-MxmD                 = flowdir(DEMx,'type','multi','routeflats','route');
+MxmD                 = flowdir(DEMx,'type','multi');
+%single flow direction flow matrix for surface in downslope direction
+MxsD                 = flowdir(DEMx,'type','single');
 %multiple flow direction flow matrix for surface in upslope direction
-MxmU                 = flowdir_inverse(DEMxi);
+MxmU                 = flowdir_inverse(DEMxi,'type','multi');
+%single flow direction flow matrix for surface in upslope direction
+MxsU                 = flowdir_inverse(DEMxi,'type','single');
 %single flow accumulation for surface
 Axs                  = flowacc(FDxs);
 %multiple flow accumulation for surface
@@ -101,7 +105,7 @@ TpInd(betaD<=0.01)   = MAX;
 %                              diffusion matrix
 %--------------------------------------------------------------------------
 if strcmp(DIFFUSION,'on')
-  %calculate the diffusion matrix: uncomment only when need diffusion routing
+  %calculate the diffusion matrix
   D                    = Diffusion_Matrix(HSUs,Nc);
 else
   D                    = zeros(Nc,Nc);
@@ -110,16 +114,16 @@ end
 %                      Flow Distribution Matrices (FDMs)
 %--------------------------------------------------------------------------
 %multiple-direction DOWNSLOPE FDM for surface
-WxmD                 = FDM_calc_surface(MxmD,HSUs,Nc,Nr);
-%multiple-direction UPSLOPE FDM for surface:uncomment only when need diffusion routing
+WxmD                 = FDM_calc_surface(MxmD,MxsD,HSUs,Nc,Nr);
+%multiple-direction UPSLOPE FDM for surface
 if strcmp(DIFFUSION,'on')
-  WxmU                 = FDM_calc_surface(MxmU,HSUs,Nc,Nr);
+  WxmU                 = FDM_calc_surface(MxmU,MxsU,HSUs,Nc,Nr);
 else
   WxmU                 = zeros(Nc,Nc);
 end
 %multiple-direction DOWNSLOPE FDM for subsurface
 WbmD                 = FDM_calc_subsurface(MbmD,HSUs,Nc);
-%multiple-direction UPSLOPE FDM for subsurface:uncomment only when need diffusion routing
+%multiple-direction UPSLOPE FDM for subsurface
 if strcmp(DIFFUSION,'on')
   WbmU                 = FDM_calc_subsurface(MbmU,HSUs,Nc);
 else
@@ -306,25 +310,24 @@ W(end,:)   = 0;
 W(end,end) = 1;
 W          = W';    
 %**************************************************************************
-function W = FDM_calc_surface(M,TPIND,Nc,Nr)
+function W = FDM_calc_surface(Mm,Ms,TPIND,Nc,Nr)
 %squeeze HSUs into a vector
 TWI     = TPIND(:);
 %find the non-zero elements of the flow matrix
-[ix,jy] = find(M);
+[ix,jy] = find(Mm);
 %flow weighting matrix for (HSUs interactions with one another)
 W       = zeros(Nc,Nc);
 for ii=1:length(ix)
   %if the giver is a surface hillslope cell
   if TWI(ix(ii))<=Nc-Nr
-    %give according to flow distribution matrix
-      W( TWI(ix(ii)),TWI(jy(ii)) )=W( TWI(ix(ii)),TWI(jy(ii)) ) +  M( ix(ii),jy(ii) );
+    %give according to flow MULTIPLE direction distribution matrix
+      W( TWI(ix(ii)),TWI(jy(ii)) )=W( TWI(ix(ii)),TWI(jy(ii)) ) +  Mm( ix(ii),jy(ii) );
   else
     %otherwise, if giver is a surface channel cell, then it can only give to
-    % other surface channel cells 
+    % other surface channel cells according to SINGLE direction flow matrix 
     if TWI(jy(ii))>Nc-Nr
-      W( TWI(ix(ii)),TWI(jy(ii)) ) = W( TWI(ix(ii)),TWI(jy(ii)) ) +  M( ix(ii),jy(ii) );
+      W( TWI(ix(ii)),TWI(jy(ii)) ) = W( TWI(ix(ii)),TWI(jy(ii)) ) +  Ms( ix(ii),jy(ii) );
     end
-    
   end
 end
 %sum of weights should add up to one (for mass continuity)
