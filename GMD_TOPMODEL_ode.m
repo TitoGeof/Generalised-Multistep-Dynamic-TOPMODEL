@@ -34,7 +34,7 @@ M3(M1==1)            = 1;
 JPAT                 = [M2 M1 M1; M1 M1 M1; M1 M1 M3];      
 %--------------------------------------------------------------------------
 %ODe solver Options
-OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',1e-6,'RelTol',1e-3);
+OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',1e-8,'RelTol',1e-4);
 %solve using ode15s
 tic;
 [~,V]                = ode15s(@HydroGEM_ode_fun,t,V0,OPS,area,d,Nc,Smax,FET,FDR,mannN,D,WxmD...
