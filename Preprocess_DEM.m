@@ -16,17 +16,17 @@ DEMxi                = Invert_DEM(DEMx);
 %                             flow objects 
 %--------------------------------------------------------------------------
 %single flow direction for surface[object]
-FDxs                 = FLOWobj(DEMx,'type','single','preprocess','fill');
+FDxs                 = FLOWobj(DEMx,'type','single');
 % %multiple flow direction fo surface [object]
-FDxm                 = FLOWobj(DEMx,'type','multi','preprocess','fill');
+FDxm                 = FLOWobj(DEMx,'type','multi');
 %multiple flow direction flow matrix for surface in downslope direction
-MxmD                 = flowdir(DEMx,'type','multi');
+MxmD                 = flowdir(DEMx,'type','multi','routeflats','route');
 %single flow direction flow matrix for surface in downslope direction
-MxsD                 = flowdir(DEMx,'type','single');
+MxsD                 = flowdir(DEMx,'type','multi','routeflats','route','exponent',10);
 %multiple flow direction flow matrix for surface in upslope direction
-MxmU                 = flowdir_inverse(DEMxi,'type','multi');
+MxmU                 = flowdir_inverse(DEMxi,'type','multi','routeflats','route');
 %single flow direction flow matrix for surface in upslope direction
-MxsU                 = flowdir_inverse(DEMxi,'type','single');
+MxsU                 = flowdir_inverse(DEMxi,'type','multi','routeflats','route','exponent',10);
 %single flow accumulation for surface
 Axs                  = flowacc(FDxs);
 %multiple flow accumulation for surface
