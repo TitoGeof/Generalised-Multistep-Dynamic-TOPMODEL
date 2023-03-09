@@ -103,7 +103,7 @@ obsR    = obsR./dTime*60*60*1000;
 
 
 TITLE=['catchment:' num2str(AREA/1e6) 'km^2' ' | ' '#HSUs:' num2str(Nc) ' | ' 'runtime:' num2str(round(simTime)) 's' ...
-  ' | ' 'KGE:' num2str(round(KGE*100)) '%' ' | ' 'massErr: ' num2str(round(massErr,1,'significant')) '%'];
+  ' | ' 'KGE:' num2str(round(KGE*100)) '%' ' | ' 'massErr: ' num2str(round(massErr,1,'significant')) '%  of tot.rain'];
 %--------------------
 figure(201)
 clf
@@ -127,7 +127,7 @@ set(haxes1(2),'YColor','b');
 set(haxes1(2),'YDir','reverse');
 ylim(haxes1(2),[0 max(obsR)*5]);
 xlim(haxes1(2),[min(DT) max(DT)]);
-LEG=legend('obsQ','predQ','baseflow','obsPeak','predPeak'...
+LEG=legend('obsQ','predQ','baseflow'...
 ,'spin-up','rainfall','location','best','orientation','vertical');
 set(LEG,'box','on','color','w')
 %--------------------
