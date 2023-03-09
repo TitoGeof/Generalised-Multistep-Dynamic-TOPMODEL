@@ -24,11 +24,11 @@ FDxm                 = FLOWobj(DEMx,'type','multi');
 %multiple flow direction flow matrix for surface in downslope direction
 MxmD                 = flowdir(DEMx,'type','multi','routeflats','route');
 %single flow direction flow matrix for surface in downslope direction
-MxsD                 = flowdir(DEMx,'type','multi','routeflats','route','exponent',10);
+MxsD                 = flowdir(DEMx,'type','single','routeflats','route');
 %multiple flow direction flow matrix for surface in upslope direction
 MxmU                 = flowdir_inverse(DEMxi,'type','multi','routeflats','route');
 %single flow direction flow matrix for surface in upslope direction
-MxsU                 = flowdir_inverse(DEMxi,'type','multi','routeflats','route','exponent',10);
+MxsU                 = flowdir_inverse(DEMxi,'type','single','routeflats','route');
 %single flow accumulation for surface
 Axs                  = flowacc(FDxs);
 %multiple flow accumulation for surface
