@@ -1,4 +1,4 @@
-function [Qt,Qfrac,simTime,dTime]=GMD_TOPMODEL_ode(D,WxmD,WxmU,WbmD,WbmU,obsR,...
+function [Qt,Qfrac,simTime,dTime,massErr]=GMD_TOPMODEL_ode(D,WxmD,WxmU,WbmD,WbmU,obsR,...
                         params,cs,DT0,t,SINa,SINb,COSa,COSb,area,AREA,Nr,Nc,cW)                    
 warning('off','all');
 %-------------------------------------------------------------------------- 
@@ -68,6 +68,10 @@ qo                   = area(Nc).*qo*AREA;
 Qfrac                = qb./(qo+qb+e);
 %calculate total flow (hydrograph)
 Qt                   = qo + qb;
+%--------------------------------------------------------------------------
+%calculate mass error
+%--------------------------------------------------------------------------
+[ERR,massErr]=mass_balance(t,Nc,Smax,ep,V,Qt,FDR,FET,AREA,area);
 %**************************************************************************
 %**************************************************************************
 %                               subfunctions
@@ -203,3 +207,39 @@ function [F,x]    = stepfun(x,x0,e)
 %a step function to handle the discontinous solution profiles
 x(x<e)            = e;
 F                 = (1+tanh((x-x0)./e))/2;
+%**************************************************************************
+function [ERR,massErr]=mass_balance(t,Nc,Smax,ep,V,Qt,FDR,FET,AREA,area)
+dTime=t(2)-t(1);
+%machine precision
+e                = 1e-64;
+%--------------------------------------------------------------------------
+%interpolate rainfall intensity based on solver time
+Rn               = FDR(t);   Rn(Rn<0) = 0;
+%calculate volume of rain [m3]
+RnT              = Rn*AREA*dTime;
+%--------------------------------------------------------------------------
+%interpolate potential evapotranspiration rate
+ET               = FET(t);   ET(ET<0) = 0;
+Ep               = ep.*ET;
+%amount of surface water
+Sx               = V(:,1:Nc);
+%calulate rootzone storage available for evapo-transpiration
+w3                = stepfun(Sx,Smax,e);
+Srz               = w3.*Smax + (1-w3).*Sx;
+%calculate actual evapo-transpiration
+Ea                = Ep.*Srz./(Smax);
+[w4,Ea]           = stepfun(Ea,Srz,e);
+Ea                = w4.*Srz + (1-w4).*Ea;
+%calculate total Ea across the catchment in each timestep
+EaT               = sum(area'.*Ea*AREA*dTime,2);
+%--------------------------------------------------------------------------
+%calculate total storage across the catchment in each timestep
+A                 = [area;area;area]'*AREA;
+ST                = sum(A.*V,2);
+%--------------------------------------------------------------------------
+%mass balance in each timestep as a percentage of total rain
+%*** |dS - r + Ea + Q| = 0 in each timestep ***
+err              = abs(ST-ST(1)- cumsum(RnT) + cumsum(EaT) + cumsum(Qt*dTime));
+ERR              = err./(sum(RnT(:))+1)*100;
+%error at the end of simulation
+massErr          = ERR(end);
