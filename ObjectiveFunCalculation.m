@@ -32,7 +32,7 @@ pQtimes(cond) = oQtimes(cond);
 %objective functions: Nash-Sutcliffe efficiency (high and low flows)
 pQ            = pQ+1e-8;
 oQ            = oQ+1e-8;
-ofs_NSE_H = 1-sum( (oQ-pQ).^2 )./sum( (oQ-mean(oQ)+eps).^2 );
-ofs_NSE_L = 1-sum( (log(oQ)-log(pQ)).^2 )./sum( (log(oQ)-mean(log(oQ))+eps).^2 );
+ofs_NSE = 1-sum( (oQ-pQ).^2 )./sum( (oQ-mean(oQ)+eps).^2 );
+ofs_KGE = 1-sqrt( (corr(pQ,oQ)-1).^2 + (std(pQ)./std(oQ)-1).^2 + (mean(pQ)./mean(oQ)-1).^2 );
 %aggregate objective functions & performance metrics
-ofsALL = [ofs_NSE_H,ofs_NSE_L, ofs_RMQ, ofs_RMT];
+ofsALL = [ofs_NSE,ofs_KGE, ofs_RMQ, ofs_RMT];
