@@ -83,11 +83,11 @@ load([pwd '\DATA\' 'obsData' catchname],'DT','obsQ','DTR','obsR','yyyymmddHH0');
 %long time for large catchments. especially if ISOBASINS and/or DIFFUSION
 %are turned 'on'. After that, load values from disk for future simulations of you catchment.
 
-% [WxmD,WxmU,WbmD,WbmU,D,SINa,SINb,COSa,COSb,areaf,AREA,Nc,Nr,TPIND,cs,DEM,cW]...
-%     =Preprocess_DEM(catchname,CHthresh,Href,Athresh,cs,ISOBASINS,DIFFUSION,TI_bins,outletW);
+[WxmD,WxmU,WbmD,WbmU,D,SINa,SINb,COSa,COSb,areaf,AREA,Nc,Nr,TPIND,cs,DEM,cW]...
+     =Preprocess_DEM(catchname,CHthresh,Href,Athresh,cs,ISOBASINS,DIFFUSION,TI_bins,outletW);
 
 NAME = [catchname num2str(Href) '_' num2str(Athresh) 'DEM_PRE_PROCESS'];
-% save([pwd '\DATA\' NAME '.mat'],'areaf','AREA','WxmD','WxmU','WbmD','WbmU','SINa','SINb','COSa','COSb','cs','TPIND','Nr','Nc','DEM','D','cW')
+save([pwd '\DATA\' NAME '.mat'],'areaf','AREA','WxmD','WxmU','WbmD','WbmU','SINa','SINb','COSa','COSb','cs','TPIND','Nr','Nc','DEM','D','cW')
 load([pwd '\DATA\' NAME '.mat'],'areaf','AREA','WxmD','WxmU','WbmD','WbmU','SINa','SINb','COSa','COSb','cs','TPIND','Nr','Nc','DEM','D','cW')
 %--------------------------------------------------------------------------
 %                              run GMD-TOPMODEL 
