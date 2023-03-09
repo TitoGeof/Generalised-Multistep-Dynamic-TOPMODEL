@@ -107,8 +107,8 @@ DTR     = DTR/60/60/24;
 obsR    = obsR./dTime*60*60*1000;
 
 
-TITLE=['catchment:' num2str(AREA/1e6) 'km^2' '  |  ' '#HSUs:' num2str(Nc) '  |  ' 'runtime:' num2str(round(simTime)) 's' '  |  ' 'NSE_H:' num2str(round(ofsALL(1)*100)) '%' ...
-  '  |  ' 'NSE_L:' num2str(round(ofsALL(2)*100)) '%' '  |  ' 'PME:' num2str(round(ofsALL(3))) '%' '  |  ' 'PTE:' num2str(round(ofsALL(4))) 'mins'];
+TITLE=['catchment:' num2str(AREA/1e6) 'km^2' ' | ' '#HSUs:' num2str(Nc) ' | ' 'runtime:' num2str(round(simTime)) 's' ' | ' 'NSE:' num2str(round(ofsALL(1)*100)) '%' ...
+  ' | ' 'KGE:' num2str(round(ofsALL(2)*100)) '%' ' | ' 'PME:' num2str(round(ofsALL(3))) '%' ' | ' 'PTE:' num2str(round(ofsALL(4))) 'mins' ' | ' 'massErr: ' num2str(round(massErr,1,'significant')) '%'];
 %--------------------
 figure(201)
 clf
