@@ -1,11 +1,13 @@
-function [Qt,Qfrac,simTime,dTime,massErr]=GMD_TOPMODEL_ode(D,WxmD,WxmU,WbmD,WbmU,obsR,...
-                        params,cs,DT0,t,SINa,SINb,COSa,COSb,area,AREA,Nr,Nc,cW)                    
+function [Qt,Qfrac,simTime,dTime,massErr,KGE,SpinUp]=GMD_TOPMODEL_ode(D,WxmD,WxmU,WbmD,WbmU,obsR,obsQ,...
+                        params,cs,DT0,t,SINa,SINb,COSa,COSb,area,AREA,Nr,Nc,cW,SpinUp)              
 warning('off','all');
 %-------------------------------------------------------------------------- 
 %number of observed data points [-]
 Nobs                 = size(obsR,1);
 %observed rainfall resolution [s]
 dTime                = t(2)-t(1);
+%define spin up in terms of data timestep
+SpinUp               = SpinUp*(24*60*60/dTime);
 %load uncertain/input model parameters
 [d,Tmax,ep,Smax,mannNhs,mannNch,Hmax] = unPack_uncertain_parameters(params);
 %initialise system
@@ -71,7 +73,7 @@ Qt                   = qo + qb;
 %--------------------------------------------------------------------------
 %calculate mass error
 %--------------------------------------------------------------------------
-[ERR,massErr]=mass_balance(t,Nc,Smax,ep,V,Qt,FDR,FET,AREA,area);
+[KGE,massErr]=ObjectiveFunCalculation(t,Nc,Smax,ep,V,Qt,FDR,FET,AREA,area,obsQ,SpinUp);
 %**************************************************************************
 %**************************************************************************
 %                               subfunctions
@@ -96,8 +98,8 @@ Sw               = V(2*Nc+1:3*Nc,1) ;
 %interpolate rainfall intensity based on solver time
 Rn               = FDR(t);   Rn(Rn<e) = e;
 %interpolate potential evapotranspiration rate
-ET               = FET(t);   ET(ET<e) = e;
-Ep               = ep.*ET;
+ET               = FET(t);  
+Ep               = ep.*ET;   Ep(Ep<e)=e;
 %--------------------------------------------------------------------------
 %                       subsurface storage updates
 %--------------------------------------------------------------------------
@@ -208,18 +210,25 @@ function [F,x]    = stepfun(x,x0,e)
 x(x<e)            = e;
 F                 = (1+tanh((x-x0)./e))/2;
 %**************************************************************************
-function [ERR,massErr]=mass_balance(t,Nc,Smax,ep,V,Qt,FDR,FET,AREA,area)
-dTime=t(2)-t(1);
+function [KGE,massErr]=ObjectiveFunCalculation(t,Nc,Smax,ep,V,pQ,FDR,FET,AREA,area,oQ,SpinUp)
 %machine precision
 e                = 1e-64;
+%exclude Spin-up period from evaluaiton
+t(1:SpinUp)      = [];
+V(1:SpinUp,:)    = [];
+oQ(1:SpinUp)     = [];
+pQ(1:SpinUp)     = [];
+%--------------------------------------------------------------------------
+%data timestep 
+dTime=t(2)-t(1);
 %--------------------------------------------------------------------------
 %interpolate rainfall intensity based on solver time
-Rn               = FDR(t);   Rn(Rn<0) = 0;
+Rn               = FDR(t);   Rn(Rn<e) = e;
 %calculate volume of rain [m3]
 RnT              = Rn*AREA*dTime;
 %--------------------------------------------------------------------------
 %interpolate potential evapotranspiration rate
-ET               = FET(t);   ET(ET<0) = 0;
+ET               = FET(t);   ET(ET<e) = e;
 Ep               = ep.*ET;
 %amount of surface water
 Sx               = V(:,1:Nc);
@@ -239,7 +248,10 @@ ST                = sum(A.*V,2);
 %--------------------------------------------------------------------------
 %mass balance in each timestep as a percentage of total rain
 %*** |dS - r + Ea + Q| = 0 in each timestep ***
-err              = abs(ST-ST(1)- cumsum(RnT) + cumsum(EaT) + cumsum(Qt*dTime));
+err              = abs(ST-ST(1)- cumsum(RnT) + cumsum(EaT) + cumsum(pQ*dTime));
 ERR              = err./(sum(RnT(:))+1)*100;
 %error at the end of simulation
 massErr          = ERR(end);
+%--------------------------------------------------------------------------
+%KlingGupta Efficiency
+KGE = 1-sqrt( (corr(pQ,oQ)-1).^2 + (std(pQ)./std(oQ)-1).^2 + (mean(pQ)./mean(oQ)-1).^2 );
