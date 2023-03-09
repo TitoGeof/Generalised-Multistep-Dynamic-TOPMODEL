@@ -42,6 +42,8 @@ outletW     = 2;   %catchment outlet width [m]
 %--------------------------------------------------------------------------
 cs          = 2; %DEM cellsize [m]; resolution of DEM raster
 %--------------------------------------------------------------------------
+SpinUp = 10; %10-day spinup period(predictions aren't considered here)  
+%--------------------------------------------------------------------------
 %                 input model parameters (need calibration)
 %--------------------------------------------------------------------------
 %exponential decay parameter, d [m]
@@ -90,25 +92,18 @@ load([pwd '\DATA\' NAME '.mat'],'areaf','AREA','WxmD','WxmU','WbmD','WbmU','SINa
 %--------------------------------------------------------------------------
 %                              run GMD-TOPMODEL 
 %--------------------------------------------------------------------------
-[predQ,Qfrac,simTime,dTime] = GMD_TOPMODEL_ode(D,WxmD,WxmU,WbmD,WbmU,obsR...
-  , PARAMset,cs,yyyymmddHH0,DTR,SINa,SINb,COSa,COSb,areaf,AREA,Nr,Nc,cW);
-%--------------------------------------------------------------------------
-SpinUp = 10*(24*6); %10-day spinup period(predictions aren't considered here)  
-%evaluate objective functions
-[ofsALL,oQtimes,oQpeaks,pQtimes,pQpeaks] = ObjectiveFunCalculation(SpinUp...
-    ,predQ,obsQ,Qfrac,dTime);
+[predQ,Qfrac,simTime,dTime,massErr,KGE,SpinUp] = GMD_TOPMODEL_ode(D,WxmD,WxmU,WbmD,WbmU,obsR,obsQ...
+  , PARAMset,cs,yyyymmddHH0,DTR,SINa,SINb,COSa,COSb,areaf,AREA,Nr,Nc,cW,SpinUp);
 %--------------------------------------------------------------------------
 %                         plot rainfall-discharge 
 %--------------------------------------------------------------------------
-oQtimes = (SpinUp+oQtimes)*dTime/60/60/24;
-pQtimes = (SpinUp+pQtimes)*dTime/60/60/24;
 DT      = DT/60/60/24;
 DTR     = DTR/60/60/24;
 obsR    = obsR./dTime*60*60*1000;
 
 
-TITLE=['catchment:' num2str(AREA/1e6) 'km^2' ' | ' '#HSUs:' num2str(Nc) ' | ' 'runtime:' num2str(round(simTime)) 's' ' | ' 'NSE:' num2str(round(ofsALL(1)*100)) '%' ...
-  ' | ' 'KGE:' num2str(round(ofsALL(2)*100)) '%' ' | ' 'PME:' num2str(round(ofsALL(3))) '%' ' | ' 'PTE:' num2str(round(ofsALL(4))) 'mins' ' | ' 'massErr: ' num2str(round(massErr,1,'significant')) '%'];
+TITLE=['catchment:' num2str(AREA/1e6) 'km^2' ' | ' '#HSUs:' num2str(Nc) ' | ' 'runtime:' num2str(round(simTime)) 's' ...
+  ' | ' 'KGE:' num2str(round(KGE*100)) '%' ' | ' 'massErr: ' num2str(round(massErr,1,'significant')) '%'];
 %--------------------
 figure(201)
 clf
@@ -120,8 +115,6 @@ hold on
 [haxes1,hline1,hline2] = plotyy(DT,obsQ,DTR,obsR,'area','area');
 plot(DT,predQ,'k:','linewidth',1.5)
 plot(DT,Qfrac.*predQ,'r-')
-scatter(oQtimes,oQpeaks,20,'mo')
-scatter(pQtimes,pQpeaks,25,'m*')
 plot([DT(SpinUp) DT(SpinUp)],[0 max(obsQ)*100],'m--','linewidth',1)
 ylabel(haxes1(1),'Q [m^3/s]','color','k');
 set(hline1(1),'FaceColor','c','EdgeColor','c');
@@ -144,8 +137,6 @@ hold on
 [haxes1,hline1,hline2] = plotyy(DT,obsQ,DTR,obsR,'area','area');
 plot(DT,predQ,'k:','linewidth',1.5)
 plot(DT,Qfrac.*predQ,'r-')
-scatter(oQtimes,oQpeaks,'mo')
-scatter(pQtimes,pQpeaks,'m*')
 plot([DT(SpinUp) DT(SpinUp)],[min(Qfrac.*predQ) max(obsQ)*100],'m--','linewidth',1)
 ylabel(haxes1(1),'Q [m^3/s]','color','k');
 ylim(haxes1(1),[min(Qfrac.*predQ) max(obsQ)*1.5]);
