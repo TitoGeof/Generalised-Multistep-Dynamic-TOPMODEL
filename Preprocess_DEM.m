@@ -8,6 +8,8 @@ warning('off','all');
 DEMx                 = GRIDobj([pwd '\DATA\' catchname 'dem.tif']);
 %just to be sure, sometimes it comes out as 'single' and that's an issue
 DEMx.Z               = double(DEMx.Z);
+%burn the channel network into DEM
+DEMx                 = burn_channel_network(DEMx,cs,CHthresh);
 %fill the sinks 
 DEMx                 = fillsinks(DEMx);
 %turn the DEM inside out to calculate upslope adjacency matrix
@@ -383,3 +385,22 @@ for ii            = 1:nc
     Ic(ix(cond))  = mean(I(ix(cond)));
     Ind(ix(cond)) = ID;
 end
+%**************************************************************************
+function DEMx=burn_channel_network(DEMx,cs,CHthresh)
+%first fill any sinks
+DEMx                 = fillsinks(DEMx);
+%calculate mult flow direction 
+FDx                  = FLOWobj(DEMx,'type','multi');
+%multi flow accumulation 
+Axs                  = flowacc(FDx);
+%upslope contributing area
+areaUp               = Axs.*cs*2;
+%define channel network
+ch                   = 0*DEMx.Z;
+ch(areaUp>=CHthresh) = 1;
+%calculate an elevation modifier for the DEM data
+mod                  = 1+areaUp./max(areaUp(:));
+%exclude non-channel cells from modification
+mod(ch==0)           = 1;
+%now modify the elevation data in the channel areas
+DEMx.Z               = DEMx.Z./mod;
