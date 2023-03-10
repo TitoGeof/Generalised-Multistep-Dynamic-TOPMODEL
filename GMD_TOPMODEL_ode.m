@@ -35,11 +35,13 @@ M2(M1==1)            = 1;
 M3(M1==1)            = 1;
 JPAT                 = [M2 M1 M1; M1 M1 M1; M1 M1 M3];      
 %--------------------------------------------------------------------------
+%define ode solver's time vector
+tO                   = linspace(t(1),t(end),2*length(t))'
 %ODe solver Options
 OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',1e-8,'RelTol',1e-6);
 %solve using ode15s
 tic;
-[~,V]                = ode15s(@HydroGEM_ode_fun,t,V0,OPS,area,d,Nc,Smax,FET,FDR,mannN,D,WxmD...
+[~,V]                = ode15s(@HydroGEM_ode_fun,tO,V0,OPS,area,d,Nc,Smax,FET,FDR,mannN,D,WxmD...
                               ,WbmD,WxmU,WbmU,cs,SINa,SINb,COSa,COSb,Tmax,Hmax,Nr,cW,ep);
 simTime              = toc;
 e                    = 1e-64;
@@ -72,8 +74,14 @@ Qfrac                = qb./(qo+qb+e);
 Qt                   = qo + qb;
 %--------------------------------------------------------------------------
 %calculate mass error
+[massErr]            = massError(tO,Nc,Smax,ep,V,Qt,FDR,FET,AREA,area,SpinUp);
 %--------------------------------------------------------------------------
-[KGE,massErr]=ObjectiveFunCalculation(t,Nc,Smax,ep,V,Qt,FDR,FET,AREA,area,obsQ,SpinUp);
+%interpolate predicted discharge to observed discharge times
+Qt                   = interp1(tO,Qt,t,'pchip');
+Qfrac                = interp1(tO,Qfrac,t,'pchip');
+%--------------------------------------------------------------------------
+%calculate Kling Gupta performance metric
+[KGE]                = ObjectiveFunCalculation(Qt,obsQ,SpinUp);
 %**************************************************************************
 %**************************************************************************
 %                               subfunctions
@@ -210,13 +218,20 @@ function [F,x]    = stepfun(x,x0,e)
 x(x<e)            = e;
 F                 = (1+tanh((x-x0)./e))/2;
 %**************************************************************************
-function [KGE,massErr]=ObjectiveFunCalculation(t,Nc,Smax,ep,V,pQ,FDR,FET,AREA,area,oQ,SpinUp)
+function [KGE]=ObjectiveFunCalculation(pQ,oQ,SpinUp)
+%exclude Spin-up period from evaluaiton
+oQ(1:SpinUp)     = [];
+pQ(1:SpinUp)     = [];
+%--------------------------------------------------------------------------
+%KlingGupta Efficiency
+KGE = 1-sqrt( (corr(pQ,oQ)-1).^2 + (std(pQ)./std(oQ)-1).^2 + (mean(pQ)./mean(oQ)-1).^2 );
+%**************************************************************************
+function [massErr]=massError(t,Nc,Smax,ep,V,pQ,FDR,FET,AREA,area,SpinUp)
 %machine precision
 e                = 1e-64;
 %exclude Spin-up period from evaluaiton
 t(1:SpinUp)      = [];
 V(1:SpinUp,:)    = [];
-oQ(1:SpinUp)     = [];
 pQ(1:SpinUp)     = [];
 %--------------------------------------------------------------------------
 %data timestep 
@@ -252,6 +267,3 @@ err              = abs(ST-ST(1)- cumsum(RnT) + cumsum(EaT) + cumsum(pQ*dTime));
 ERR              = err./(sum(RnT(:))+1)*100;
 %error at the end of simulation
 massErr          = ERR(end);
-%--------------------------------------------------------------------------
-%KlingGupta Efficiency
-KGE = 1-sqrt( (corr(pQ,oQ)-1).^2 + (std(pQ)./std(oQ)-1).^2 + (mean(pQ)./mean(oQ)-1).^2 );
