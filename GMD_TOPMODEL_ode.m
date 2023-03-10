@@ -36,7 +36,7 @@ M3(M1==1)            = 1;
 JPAT                 = [M2 M1 M1; M1 M1 M1; M1 M1 M3];      
 %--------------------------------------------------------------------------
 %define ode solver's time vector
-tO                   = linspace(t(1),t(end),2*length(t))'
+tO                   = linspace(t(1),t(end),2*length(t))';
 %ODe solver Options
 OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',1e-8,'RelTol',1e-6);
 %solve using ode15s
