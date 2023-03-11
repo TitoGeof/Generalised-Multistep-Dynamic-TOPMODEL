@@ -1,7 +1,7 @@
 %**************************************************************************
-function [d,Tmax,ep,Smax,mannNhs,mannNch,Hmax]=unPack_uncertain_parameters(params)
+function [d,Tmax,ep,Smax,mannNhs,mannNch,Hmax,ABSTOL]=unPack_uncertain_parameters(params)
 %--------------------------------------------------------------------------
-%                          zone0 parameters
+%                          uncertain (calibration) parameters
 %--------------------------------------------------------------------------
 %powerlaw decay parameter [m]
 d       = params(1);
@@ -19,3 +19,9 @@ mannNhs = params(5);
 mannNch = params(6);
 %average max subsurface storage [m]
 Hmax    = params(7);
+%--------------------------------------------------------------------------
+%                 define appropreiate ode-solver tolerance values
+%--------------------------------------------------------------------------
+%define "AbsTol" for the ode solver
+MIN         = min([Tmax;ep;mannNhs;mannNch;Hmax]);
+ABSTOL      = max(min(MIN,1e-6),1e-16);
