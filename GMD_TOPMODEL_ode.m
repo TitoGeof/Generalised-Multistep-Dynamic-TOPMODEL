@@ -12,22 +12,22 @@ SpinUp               = SpinUp*(24*60*60/dTime);
 [d,Tmax,ep,Smax,mannNhs,mannNch,Hmax,ABSTOL] = unPack_uncertain_parameters(params);
 %initialise system
 [Sx0,Su0,Sw0]        = initialiseSYS(Nc,Hmax);
-%assemble manning's n coefficient for classes
+%assemble manning's n coefficient for hillslope vs channel classes
 mannN                = 0*Sx0 + mannNhs;           %hillslope
 mannN(Nc-Nr+1:end,1) = mannNch;                   %channels
 %annual daily average evapo-transpiration rate [m/s]
 ET                   = seasonal_sinewave_evap(DT0,1,dTime,(1:length(obsR))');
-%convert total rainfal to rainfall intensity [m/s]
+%convert total rainfal (e.g., from tipping bucket) to rainfall intensity [m/s]
 drdt                 = obsR./dTime;
 %define method of interpolation
 METHOD               = 'pchip';
 %create gridded interpolation
 FDR                  = griddedInterpolant(t,drdt,METHOD);
 FET                  = griddedInterpolant(t,ET  ,METHOD);
-%initial ode variables
+%assemple the vector of state variables
 V0                   = [Sx0;Su0;Sw0];
 %--------------------------------------------------------------------------
-%jacobian pattern (tells the ODe solver to evaluate only where JPAT=1 to save runtime)
+%jacobian pattern (tells the ode-solver to evaluate only where JPAT=1 to save runtime - see model paper for details)
 M1                   = full(diag(ones(Nc,1)));
 M2                   = sign(WxmD + D' + WxmU);
 M3                   = sign(WbmD + D' + WbmU);
@@ -35,18 +35,20 @@ M2(M1==1)            = 1;
 M3(M1==1)            = 1;
 JPAT                 = [M2 M1 M1; M1 M1 M1; M1 M1 M3];      
 %--------------------------------------------------------------------------
-%define ode solver's time vector
+%define ode-solver time vector
 tO                   = linspace(t(1),t(end),2*length(t))';
-%ODe solver Options
+%ode-solver Options
 OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',ABSTOL,'RelTol',100*ABSTOL);
-%solve using ode15s
+%solve using ode15s, suitable for "stiff" system if equations
 tic;
 [~,V]                = ode15s(@HydroGEM_ode_fun,tO,V0,OPS,area,d,Nc,Smax,FET,FDR,mannN,D,WxmD...
                               ,WbmD,WxmU,WbmU,cs,SINa,SINb,COSa,COSb,Tmax,Hmax,Nr,cW,ep);
 simTime              = toc;
 e                    = 1e-64;
-%in case ode solver has crashed midway
+%in case ode-solver has crashed midway
 if size(V,1)<Nobs; V = nan(Nobs,3*Nc); end
+%--------------------------------------------------------------------------
+%calculate outlet discharge
 %--------------------------------------------------------------------------
 %disaggregate variables 
 Sx                   = V(:,Nc);
@@ -75,7 +77,7 @@ Qt                   = qo + qb;
 %calculate mass error
 [massErr]            = massError(tO,Nc,Smax,ep,V,Qt,FDR,FET,AREA,area,SpinUp);
 %--------------------------------------------------------------------------
-%interpolate predicted discharge to observed discharge times
+%interpolate predicted discharge to observed discharge/rainfall times
 Qt                   = interp1(tO,Qt,t,'pchip');
 Qfrac                = interp1(tO,Qfrac,t,'pchip');
 %--------------------------------------------------------------------------
@@ -146,7 +148,7 @@ qbi              = qbiD + qbiU;
 %--------------------------------------------------------------------------
 %vertical hydraulic conductivity averaged across unsaturated zone's thickness
 Kbar              = Su.*(Tmax-T)./(Hu+e).^2;
-%total vertical flow based on Richard's Equation
+%total vertical flow based on Richard's type Equation
 qv                = Kbar.*(-Su./(Hu+e).*COSb+1);  
 %ensure it doesn't exceed available Su
 [w2,qv]           = stepfun(qv,Su,e);
@@ -160,7 +162,7 @@ Srz               = w3.*Smax + (1-w3).*Sx;
 Ea                = Ep.*Srz./(Smax);
 [w4,Ea]           = stepfun(Ea,Srz,e);
 Ea                = w4.*Srz + (1-w4).*Ea;
-%update available excess storage for routing
+%update surface excess storage available for routing
 Sx                = Sx - Srz ;   
 %total available storage in the subsurface (saturated + unsaturated)
 SD                = Hmax-Su-Sw;
@@ -170,8 +172,8 @@ qx                = w5.*SD + (1-w5).*Sx;
 %--------------------------------------------------------------------------
 %                       surface inflows and outflows
 %--------------------------------------------------------------------------
-%scale surface excess to acount for variable channel width(only in channel HSUs)
-%hilslope cW is set equal to cs, so no scaling happens there
+%scale surface excess to acount for variable channel width (only in channel HSUs)
+%hilslope cW is set equal to cs, so no scaling occurs there
 Ss                = Sx*cs./cW;
 %hydraulic radius for channel HSUs (assuming rectangular channel)
 R                 = Ss.*cW./(2*Ss+cW);
