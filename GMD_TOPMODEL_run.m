@@ -9,11 +9,11 @@ clc;
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
 catchname   = 'nog12_'; %cacthment file name (your DEM should be a .TIFF file called [catchname 'dem.tiff'])
-%and all model files should be placed in a folder called DATA in the
+%and all data files should be placed in a folder called DATA in the
 %directory where the model files are, i.e., data files to be loaded by the 
 % model should be in path=[pwd '\DATA\'].
 %--------------------------------------------------------------------------
-DIFFUSION='off'; % 'on' or 'off'. DIFFUSION: if 'on' diffusion flow routing
+DIFFUSION   = 'off'; % 'on' or 'off'. DIFFUSION: if 'on' diffusion flow routing
 %is performed on both hillslope and channel HSUs. if 'off', kinematic wave
 %routing is excecuted (if turned on or off, the "Preprocess_DEM" routine needds
 %to be performed again, to make sure diffusion matrix is included/excluded)
@@ -24,42 +24,41 @@ Href        = 0.5; %reference head-drop along flow path path [m] (for calculatin
 %--------------------------------------------------------------------------
 %Topographic Index (TI) bin edges (define based on your catchment's
 %topographic characteristics, or your particular application)
-TI_bins                 = [0;4;8;12;1e64];
+TI_bins      = [0;4;8;12;1e64];
 %--------------------------------------------------------------------------
-ISOBASINS='on';   % 'on' or 'off'. if 'off' discretisation is done based only on
-%Topographic Index (TI), default number of TI classes is four, but you can
-%change that inside the "Preprocess_DEM" function. if 'on', discretisation
-%is done by the combination of TI and iso-basins of roughly area of 'Athresh'
+ISOBASINS    = 'on';   % 'on' or 'off'. if 'off' discretisation is done based only on
+%Topographic Index (TI), if 'on'`, discretisation is done by the combination of TI
+%and iso-basins of area ~ 'Athresh'
 %--------------------------------------------------------------------------
-Athresh     = 2000; %iso-basin area threshold [m^2]: this value should be
+Athresh      = 2000; %iso-basin area threshold [m^2]: this value should be
 %set according to your application but also catchment size. The iso-basin
 %code can take a long time to run if this number is small, or catchment is
 %very large; worse if both. For very large catchments (>100km2) it may take
-%a day or two. But it is part of the DEM pre-processing and only needs to run once.
+%a few days. But it is part of the DEM pre-processing and only needs to run once.
 %--------------------------------------------------------------------------
-CHthresh    = 200; %channel initiation area threshold [m^2]
-outletW     = 2;   %catchment outlet width [m]
+CHthresh     = 200; %channel initiation area threshold [m^2]
+outletW      = 2;   %catchment outlet channel width [m]
 %--------------------------------------------------------------------------
-cs          = 2; %DEM cellsize [m]; resolution of DEM raster
+cs           = 2; %DEM cellsize [m]; resolution of DEM raster
 %--------------------------------------------------------------------------
-SpinUp = 10; %10-day spinup period(predictions aren't considered here)  
+SpinUp       = 10; %a 'warm-up' period (predictions discarded here)  
 %--------------------------------------------------------------------------
 %                 input model parameters (need calibration)
 %--------------------------------------------------------------------------
 %exponential decay parameter, d [m]
-PARAMset(1) = 75;
+PARAMset(1)  = 75;
 %maximum transmissivity (at saturation), Tmax [m2/s]
-PARAMset(2) = 1e-4;
+PARAMset(2)  = 1e-4;
 %maximum daily evaporation rate, averaged across a year, ep [m/day]
-PARAMset(3) = 0.004;
+PARAMset(3)  = 0.004;
 %maximum root-zone storage, Smax [m]
-PARAMset(4) = 0.02;
+PARAMset(4)  = 0.02;
 %hilslope Manning's n_{hs} [s/m^(1/3)] 
-PARAMset(5) = 0.05;
+PARAMset(5)  = 0.05;
 %channels Manning's n_{ch} [s/m^(1/3)]
-PARAMset(6) = 0.1;
+PARAMset(6)  = 0.1;
 %average max subsurface storage, Hmax [m]
-PARAMset(7) = 0.25;
+PARAMset(7)  = 0.25;
 %--------------------------------------------------------------------------
 %                  read catchment rainfall and discharg data
 %--------------------------------------------------------------------------
@@ -80,7 +79,7 @@ load([pwd '\DATA\' 'obsData' catchname],'DT','obsQ','DTR','obsR','yyyymmddHH0');
 %                       pre-processing DEM data
 %--------------------------------------------------------------------------
 %NOTE: run this function only once and save outputs, because it can take a 
-%long time for large catchments. especially if ISOBASINS and/or DIFFUSION
+%long time for large catchments. Especially if ISOBASINS and/or DIFFUSION
 %are turned 'on'. After that, load values from disk for future simulations of you catchment.
 
 [WxmD,WxmU,WbmD,WbmU,D,SINa,SINb,COSa,COSb,areaf,AREA,Nc,Nr,TPIND,cs,DEM,cW]...
@@ -102,8 +101,8 @@ DTR     = DTR/60/60/24;
 obsR    = obsR./dTime*60*60*1000;
 
 
-TITLE=['catchment:' num2str(AREA/1e6) 'km^2' ' | ' '#HSUs:' num2str(Nc) ' | ' 'runtime:' num2str(round(simTime)) 's' ...
-  ' | ' 'KGE:' num2str(round(KGE*100)) '%' ' | ' 'massErr: ' num2str(round(massErr,1,'significant')) ' % of tot.rain'];
+TITLE=['catchment: ' num2str(round(AREA/1e6,1,'significant')) 'km^2' ' | ' '#HSUs: ' num2str(Nc) ' | ' 'runtime: ' num2str(round(simTime)) 's' ...
+  ' | ' 'KGE: ' num2str(round(KGE*100)) '%' ' | ' 'massErr: ' num2str(round(massErr,1,'significant')) ' % of tot.rain'];
 %--------------------
 figure(201)
 clf
@@ -150,4 +149,5 @@ xlim(haxes1(1),[min(DT) max(DT)]);
 set(haxes1(2),'YColor','b');
 set(hline2,'FaceColor','b','EdgeColor','b');
 set(gca,'yscale','log')
+xlabel(haxes1(1),'Time [day]','color','k');
 linkaxes([hh1 hh2],'x')
