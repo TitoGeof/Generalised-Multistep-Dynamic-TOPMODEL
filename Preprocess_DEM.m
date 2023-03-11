@@ -6,20 +6,20 @@ warning('off','all');
 %--------------------------------------------------------------------------
 %load surface DEM [object]              
 DEMx                 = GRIDobj([pwd '\DATA\' catchname 'dem.tif']);
-%just to be sure, sometimes it comes out as 'single' and that's an issue
+%just to be sure, sometimes it comes out as 'single' and that'd be an issue
 DEMx.Z               = double(DEMx.Z);
 %burn the channel network into DEM
 DEMx                 = burn_channel_network(DEMx,cs,CHthresh);
 %fill the sinks 
 DEMx                 = fillsinks(DEMx);
-%turn the DEM inside out to calculate upslope adjacency matrix
+%turn the DEM inside out to calculate upslope adjacency matrix later
 DEMxi                = Invert_DEM(DEMx);
 %--------------------------------------------------------------------------
 %                             flow objects 
 %--------------------------------------------------------------------------
 %single flow direction for surface[object]
 FDxs                 = FLOWobj(DEMx,'type','single');
-% %multiple flow direction fo surface [object]
+% multiple flow direction fo surface [object]
 FDxm                 = FLOWobj(DEMx,'type','multi');
 %multiple flow direction flow matrix for surface in downslope direction
 MxmD                 = flowdir(DEMx,'type','multi','routeflats','route');
@@ -37,60 +37,61 @@ Axm                  = flowacc(FDxm);
 GRADx                = gradient(FDxm,DEMx);
 %convert to degrees 
 betaD                = atand(GRADx.Z);
-%average downslope cell angles [degrees]
+%average downslope cell angles [degrees]. Minimum is set to 0.01 of a degree
 betaD                = betaD + 0.01;
 betaD(isnan(DEMx.Z)) = NaN;
 %--------------------------------------------------------------------------
 %                    subsurface hydraulic gradient 
 %--------------------------------------------------------------------------
 if strcmp(DIFFUSION,'on')
-  %NOTE: this can take a long time to run for large DEMs, so only uncomment for
+  %NOTE: this can take a long time to run for large DEMs, so only use for
   %deep systems, or flat systems, where phreatic surface slope is expected
   %to differ significantly from surface gradient (see model's journal article)
   
-  %once the files are save, you can just load them if you need to run the 
-  % Preprocess_DEM code for different CHthresh, or TI classification,...
+  %once the files are saved, you can just load them if you need to re-run the 
+  %"Preprocess_DEM" code for different CHthresh, or TI classification, etc.
   
   %reconstruct water table gradient
   [alphaD,eD,icD,icdD] = phreatic_surface_slope_M8(DEMx,cs,Href);
   save([pwd '\DATA\' catchname '_alpha_e_ic_icd_downslope' '_' num2str(Href) 'm.mat'],'alphaD','eD','icD','icdD')
   load([pwd '\DATA\' catchname '_alpha_e_ic_icd_downslope' '_' num2str(Href) 'm.mat'],'alphaD','eD','icD','icdD')
-  %avoid zeros, add numbers of order 10e-2
-  alphaD = alphaD + 0.01;
+  %avoid zeros
+  alphaD               = alphaD + 0.01;
   %multiple flow direction flow matrix for subsurface in downslope direction
   MbmD                 = flowdir_sub(DEMx,icD,icdD,eD);
   %subaurfce gtradient in upslope direction
   [alphaU,eU,icU,icdU] = phreatic_surface_slope_M8(DEMxi,cs,Href);
   save([pwd '\DATA\' catchname '_alpha_e_ic_icd_upslope' '_' num2str(Href) 'm.mat'],'alphaU','eU','icU','icdU')
   load([pwd '\DATA\' catchname '_alpha_e_ic_icd_upslope' '_' num2str(Href) 'm.mat'],'alphaU','eU','icU','icdU')
-  alphaU = alphaU + 0.01;
+  alphaU               = alphaU + 0.01;
   %multiple flow direction flow matrix for subsurface in upslope direction
   MbmU                 = flowdir_sub_inverse(DEMxi,icD,icdD,eD);
 else
-  alphaD=betaD;
-  alphaU=betaD;
-  MbmD=MxmD;
-  MbmU=MxmU;
+  alphaD               = betaD;
+  alphaU               = betaD;
+  MbmD                 = MxmD;
+  MbmU                 = MxmU;
 end
 %--------------------------------------------------------------------------
 %                    iso-basins and channel segments
 %--------------------------------------------------------------------------
 if strcmp(ISOBASINS,'on')
-  %once you've ran and saved is-basins, you can just load them to save time
+  %once you've ran and saved iso-basins, you can just load them to save time
+  %in case you need to re-run the "Preprocess_DEM" code later
   [B,NB]               = isobasin_SG(DEMx,FDxm,Axs,cs,Athresh);
   save([pwd '\DATA\' catchname '_isobasins_map' num2str(Athresh) '.mat'],'B','NB')
   load([pwd '\DATA\' catchname '_isobasins_map' num2str(Athresh) '.mat'],'B','NB')
 else
-  B=sign(DEMx.Z);
-  B(isnan(B))=0;
-  NB=max(B(:));
+  B                    = sign(DEMx.Z);
+  B(isnan(B))          = 0;
+  NB                   = max(B(:));
 end
-%channel network (ch) and channel reach IDs (R)
-[R,ch]               = channel_reaches(DEMx,FDxs,CHthresh);
+%channel network (ch) and channel reach/segments IDs (R)
+[R,ch]                 = channel_reaches(DEMx,FDxs,CHthresh);
 %--------------------------------------------------------------------------
-%                 define Hydrologically Similar Units (HSUs)
+%                              Topographic index
 %--------------------------------------------------------------------------
-%upslope contributing area [m^2]
+%upslope contributing area per unit contour length [m]
 areaUp               = Axs.*cs;
 %Tpographic Wetness Index (TI)
 TpInd                = log(areaUp./sind(alphaD)+eps);
@@ -98,7 +99,7 @@ TpInd(isnan(DEMx.Z)) = NaN;
 MAX                  = max(TpInd(:));
 TpInd(betaD<=0.01)   = MAX;
 %--------------------------------------------------------------------------
-%                 based on Glossop channel bin edges
+%                   delineate Hydrologically Similar Units (HSUs) 
 %--------------------------------------------------------------------------
 %obtain class IDs and related slope informaiton
 [HSUs,SINa,SINb,COSa,COSb,areaf,AREA,Nc,Nr,cW] = define_HSUs(TpInd,TI_bins...
@@ -119,17 +120,17 @@ end
 WxmD                 = FDM_calc_surface(MxmD,MxsD,HSUs,Nc,Nr);
 %multiple-direction UPSLOPE FDM for surface
 if strcmp(DIFFUSION,'on')
-  WxmU                 = FDM_calc_surface(MxmU,MxsU,HSUs,Nc,Nr);
+  WxmU                = FDM_calc_surface(MxmU,MxsU,HSUs,Nc,Nr);
 else
-  WxmU                 = zeros(Nc,Nc);
+  WxmU                = zeros(Nc,Nc);
 end
 %multiple-direction DOWNSLOPE FDM for subsurface
 WbmD                 = FDM_calc_subsurface(MbmD,HSUs,Nc);
 %multiple-direction UPSLOPE FDM for subsurface
 if strcmp(DIFFUSION,'on')
-  WbmU                 = FDM_calc_subsurface(MbmU,HSUs,Nc);
+  WbmU                = FDM_calc_subsurface(MbmU,HSUs,Nc);
 else
-  WbmU                 = zeros(Nc,Nc);
+  WbmU                = zeros(Nc,Nc);
 end
 %--------------------------------------------------------------------------
 %visualise
@@ -171,14 +172,14 @@ imageschs(DEMx,B,'colormap',CM,'colorbarlabel','isoBs','ticklabels','nice','medf
 drawnow
 
 %**************************************************************************
-function DEMi=Invert_DEM(DEM)
-DEMi   = DEM;
-dem    = DEMi.Z;
-dem    = abs(dem-max(dem(:)));
-DEMi.Z = dem;
-DEMi   = fillsinks(DEMi);
+function DEMi = Invert_DEM(DEM)
+DEMi          = DEM;
+dem           = DEMi.Z;
+dem           = abs(dem-max(dem(:)));
+DEMi.Z        = dem;
+DEMi          = fillsinks(DEMi);
 %**************************************************************************
-function D=Diffusion_Matrix(HSUs,Nc)
+function D  = Diffusion_Matrix(HSUs,Nc)
 Edges       = (0.5:1:Nc+0.5)';
 D           = zeros(Nc,Nc);
 for ii      = 1:Nc
