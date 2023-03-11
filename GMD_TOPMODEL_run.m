@@ -2,7 +2,7 @@ function GMD_TOPMODEL_run
 clc;
 %--------------------------------------------------------------------------
 %Generalised Multistep Dynamic(GMD) TOPMODEL is described in detail in a paper 
-%with the same title, published in Water Resources Journal, in 2022.
+%with the same title, published in Water Resources Research Journal, in 2022.
 %Developer: Dr Salim Goudarzi: salim_goodarzi@yahoo.com
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
@@ -103,7 +103,7 @@ obsR    = obsR./dTime*60*60*1000;
 
 
 TITLE=['catchment:' num2str(AREA/1e6) 'km^2' ' | ' '#HSUs:' num2str(Nc) ' | ' 'runtime:' num2str(round(simTime)) 's' ...
-  ' | ' 'KGE:' num2str(round(KGE*100)) '%' ' | ' 'massErr: ' num2str(round(massErr,1,'significant')) '%  of tot.rain'];
+  ' | ' 'KGE:' num2str(round(KGE*100)) '%' ' | ' 'massErr: ' num2str(round(massErr,1,'significant')) ' % of tot.rain'];
 %--------------------
 figure(201)
 clf
