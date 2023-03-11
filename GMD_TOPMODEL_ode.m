@@ -9,7 +9,7 @@ dTime                = t(2)-t(1);
 %define spin up in terms of data timestep
 SpinUp               = SpinUp*(24*60*60/dTime);
 %load uncertain/input model parameters
-[d,Tmax,ep,Smax,mannNhs,mannNch,Hmax] = unPack_uncertain_parameters(params);
+[d,Tmax,ep,Smax,mannNhs,mannNch,Hmax,ABSTOL] = unPack_uncertain_parameters(params);
 %initialise system
 [Sx0,Su0,Sw0]        = initialiseSYS(Nc,Hmax);
 %assemble manning's n coefficient for classes
@@ -38,7 +38,7 @@ JPAT                 = [M2 M1 M1; M1 M1 M1; M1 M1 M3];
 %define ode solver's time vector
 tO                   = linspace(t(1),t(end),2*length(t))';
 %ODe solver Options
-OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',1e-8,'RelTol',1e-6);
+OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',ABSTOL,'RelTol',100*ABSTOL);
 %solve using ode15s
 tic;
 [~,V]                = ode15s(@HydroGEM_ode_fun,tO,V0,OPS,area,d,Nc,Smax,FET,FDR,mannN,D,WxmD...
@@ -50,7 +50,6 @@ if size(V,1)<Nobs; V = nan(Nobs,3*Nc); end
 %--------------------------------------------------------------------------
 %disaggregate variables 
 Sx                   = V(:,Nc);
-Su                   = V(:,2*Nc);
 Sw                   = V(:,3*Nc);
 %calculate base flow
 T                    = Tmax.*(Sw./Hmax).^d;
