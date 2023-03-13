@@ -400,7 +400,7 @@ areaUp               = Axs.*cs*2;
 ch                   = 0*DEMx.Z;
 ch(areaUp>=CHthresh) = 1;
 %calculate an elevation modifier for the DEM data
-mod                  = 1+areaUp./max(areaUp(:));
+mod                  = 1+areaUp./max(areaUp(:))/10000;
 %exclude non-channel cells from modification
 mod(ch==0)           = 1;
 %now modify the elevation data in the channel areas
