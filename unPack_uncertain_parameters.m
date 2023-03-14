@@ -24,4 +24,4 @@ Hmax    = params(7);
 %--------------------------------------------------------------------------
 %define "AbsTol" for the ode solver
 MIN         = min([Tmax;ep;mannNhs;mannNch;Hmax]);
-ABSTOL      = max(min(MIN,1e-6),1e-16);
+ABSTOL      = max(min(MIN,1e-6),1e-10);
