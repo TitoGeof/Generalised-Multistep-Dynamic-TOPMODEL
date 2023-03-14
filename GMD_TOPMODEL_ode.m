@@ -36,7 +36,7 @@ M3(M1==1)            = 1;
 JPAT                 = [M2 M1 M1; M1 M1 M1; M1 M1 M3];      
 %--------------------------------------------------------------------------
 %define ode-solver time vector
-tO                   = linspace(t(1),t(end),2*length(t))';
+tO                   = linspace(t(1),t(end),5*length(t))';
 %ode-solver Options
 OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',ABSTOL,'RelTol',100*ABSTOL);
 %solve using ode15s, suitable for "stiff" system if equations
