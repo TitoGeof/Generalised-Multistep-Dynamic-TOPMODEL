@@ -328,9 +328,7 @@ for ii=1:length(ix)
   else
     %otherwise, if giver is a surface channel cell, then it can only give to
     % other surface channel cells according to SINGLE direction flow matrix 
-    if TWI(jy(ii))>Nc-Nr
       W( TWI(ix(ii)),TWI(jy(ii)) ) = W( TWI(ix(ii)),TWI(jy(ii)) ) +  Ms( ix(ii),jy(ii) );
-    end
   end
 end
 %sum of weights should add up to one (for mass continuity)
