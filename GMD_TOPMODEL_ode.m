@@ -12,7 +12,7 @@ SpinUp               = SpinUp*(24*60*60/dTime);
 %load uncertain/input model parameters
 [d,Tmax,ep,Srzmax,mannNhs,mannNch,Hmax] = unPack_uncertain_parameters(params);
 %initialise system
-[Sx0,Su0,Sw0]        = initialiseSYS(Nc,Hmax);
+[Sx0,Su0,Sw0]        = initialiseSYS(Nc);
 %assemble manning's n coefficient for hillslope vs channel classes
 mannN                = 0*Sx0 + mannNhs;           %hillslope
 mannN(Nc-Nr+1:Nc)    = mannNch;                   %channels
