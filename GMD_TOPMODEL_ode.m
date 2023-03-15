@@ -18,7 +18,7 @@ mannN                = 0*Sx0 + mannNhs;           %hillslope
 mannN(Nc-Nr+1:Nc)    = mannNch;                   %channels
 %assemble max root zone storage (channel doesn't have rootzone)
 Smax                = 0*Sx0 + Srzmax;     
-Smax(Nc-Nr+1:Nc)    = eps;
+Smax(Nc-Nr+1:Nc)    = 1e-8;
 %--------------------------------------------------------------------------
 %annual daily average evapo-transpiration rate [m/s]
 ET                   = seasonal_sinewave_evap(DT0,1,dTime,(1:length(obsR))');
