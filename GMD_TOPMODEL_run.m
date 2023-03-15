@@ -91,7 +91,7 @@ load([pwd '\DATA\' NAME '.mat'],'areaf','AREA','WxmD','WxmU','WbmD','WbmU','SINa
 %--------------------------------------------------------------------------
 %                              run GMD-TOPMODEL 
 %--------------------------------------------------------------------------
-[predQ,Qfrac,simTime,dTime,massErr,KGE,SpinUp] = GMD_TOPMODEL_ode(D,WxmD,WxmU,WbmD,WbmU,obsR,obsQ...
+[predQ,Qfrac,simTime,dTime,KGE,SpinUp] = GMD_TOPMODEL_ode(D,WxmD,WxmU,WbmD,WbmU,obsR,obsQ...
   , PARAMset,cs,yyyymmddHH0,DTR,SINa,SINb,COSa,COSb,areaf,AREA,Nr,Nc,cW,SpinUp);
 %--------------------------------------------------------------------------
 %                         plot rainfall-discharge 
@@ -102,7 +102,7 @@ obsR    = obsR./dTime*60*60*1000;
 
 
 TITLE=['catchment: ' num2str(round(AREA/1e6,1,'significant')) 'km^2' ' | ' '#HSUs: ' num2str(Nc) ' | ' 'runtime: ' num2str(round(simTime)) 's' ...
-  ' | ' 'KGE: ' num2str(round(KGE*100)) '%' ' | ' 'massErr: ' num2str(round(massErr,1,'significant')) ' % of tot.rain'];
+  ' | ' 'KGE: ' num2str(round(KGE*100)) '%'];
 %--------------------
 figure(201)
 clf
