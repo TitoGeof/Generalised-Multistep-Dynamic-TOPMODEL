@@ -1,4 +1,4 @@
-function [Qt,Qfrac,simTime,dTime,massErr,KGE,SpinUp]=GMD_TOPMODEL_ode(D,WxmD,WxmU,WbmD,WbmU,obsR,obsQ,...
+function [Qt,Qfrac,simTime,dTime,KGE,SpinUp]=GMD_TOPMODEL_ode(D,WxmD,WxmU,WbmD,WbmU,obsR,obsQ,...
                         params,cs,DT0,t,SINa,SINb,COSa,COSb,area,AREA,Nr,Nc,cW,SpinUp)              
 warning('off','all');
 %-------------------------------------------------------------------------- 
@@ -8,13 +8,18 @@ Nobs                 = size(obsR,1);
 dTime                = t(2)-t(1);
 %define spin up in terms of data timestep
 SpinUp               = SpinUp*(24*60*60/dTime);
+%--------------------------------------------------------------------------
 %load uncertain/input model parameters
-[d,Tmax,ep,Smax,mannNhs,mannNch,Hmax,ABSTOL] = unPack_uncertain_parameters(params);
+[d,Tmax,ep,Srzmax,mannNhs,mannNch,Hmax] = unPack_uncertain_parameters(params);
 %initialise system
 [Sx0,Su0,Sw0]        = initialiseSYS(Nc,Hmax);
 %assemble manning's n coefficient for hillslope vs channel classes
 mannN                = 0*Sx0 + mannNhs;           %hillslope
-mannN(Nc-Nr+1:end,1) = mannNch;                   %channels
+mannN(Nc-Nr+1:Nc)    = mannNch;                   %channels
+%assemble max root zone storage (channel doesn't have rootzone)
+Smax                = 0*Sx0 + Srzmax;     
+Smax(Nc-Nr+1:Nc)    = eps;
+%--------------------------------------------------------------------------
 %annual daily average evapo-transpiration rate [m/s]
 ET                   = seasonal_sinewave_evap(DT0,1,dTime,(1:length(obsR))');
 %convert total rainfal (e.g., from tipping bucket) to rainfall intensity [m/s]
@@ -35,13 +40,11 @@ M2(M1==1)            = 1;
 M3(M1==1)            = 1;
 JPAT                 = [M2 M1 M1; M1 M1 M1; M1 M1 M3];      
 %--------------------------------------------------------------------------
-%define ode-solver time vector
-tO                   = linspace(t(1),t(end),5*length(t))';
 %ode-solver Options
-OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',ABSTOL,'RelTol',100*ABSTOL);
+OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',1e-8,'RelTol',1e-6);
 %solve using ode15s, suitable for "stiff" system if equations
 tic;
-[~,V]                = ode15s(@HydroGEM_ode_fun,tO,V0,OPS,area,d,Nc,Smax,FET,FDR,mannN,D,WxmD...
+[~,V]                = ode15s(@HydroGEM_ode_fun,t,V0,OPS,area,d,Nc,Smax,FET,FDR,mannN,D,WxmD...
                               ,WbmD,WxmU,WbmU,cs,SINa,SINb,COSa,COSb,Tmax,Hmax,Nr,cW,ep);
 simTime              = toc;
 e                    = 1e-64;
@@ -50,7 +53,6 @@ if size(V,1)<Nobs; V = nan(Nobs,3*Nc); end
 %--------------------------------------------------------------------------
 %calculate outlet discharge
 %--------------------------------------------------------------------------
-%disaggregate variables 
 Sx                   = V(:,Nc);
 Sw                   = V(:,3*Nc);
 %calculate base flow
@@ -58,8 +60,8 @@ T                    = Tmax.*(Sw./Hmax).^d;
 qb                   = SINa(Nc).*T./cs;
 qb(qb>Sw)            = Sw(qb>Sw);
 qb                   = area(Nc).*qb*AREA;
-%remove rootzone storage from total Sx to caluculate overland flow 
-Sx                   = Sx-Smax;
+%overland storage
+Sx                   = Sx -Smax(Nc);
 Sx(Sx<0)             = 0;
 %hydraulic radius for channel class
 Ss                   = Sx./cW(Nc)*cs;
@@ -73,13 +75,6 @@ qo                   = area(Nc).*qo*AREA;
 Qfrac                = qb./(qo+qb+e);
 %calculate total flow (hydrograph)
 Qt                   = qo + qb;
-%--------------------------------------------------------------------------
-%calculate mass error
-[massErr]            = massError(tO,Nc,Smax,ep,V,Qt,FDR,FET,AREA,area,SpinUp);
-%--------------------------------------------------------------------------
-%interpolate predicted discharge to observed discharge/rainfall times
-Qt                   = interp1(tO,Qt,t,'pchip');
-Qfrac                = interp1(tO,Qfrac,t,'pchip');
 %--------------------------------------------------------------------------
 %calculate Kling Gupta performance metric
 [KGE]                = ObjectiveFunCalculation(Qt,obsQ,SpinUp);
@@ -97,10 +92,9 @@ e                = 1e-64;
 %--------------------------------------------------------------------------
 %                          disaggragte variables
 %--------------------------------------------------------------------------
-V                = real(V);
-Sx               = V(1:Nc,1)  ;          
-Su               = V(Nc+1:2*Nc,1) ;     
-Sw               = V(2*Nc+1:3*Nc,1) ; 
+Sx               = V(1:Nc,1);          
+Su               = V(Nc+1:2*Nc,1);     
+Sw               = V(2*Nc+1:3*Nc,1); 
 %--------------------------------------------------------------------------
 %          interpolate rainfall and evapo-transpiration rates
 %--------------------------------------------------------------------------
@@ -159,11 +153,13 @@ qv                = w2.*Su+(1-w2).*qv;
 %calculate actual evapo-transpiration
 w3                = stepfun(Sx,Smax,e);
 Srz               = w3.*Smax + (1-w3).*Sx;
-Ea                = Ep.*Srz./(Smax);
+Ea                = Ep.*Srz./(Smax + eps);
 [w4,Ea]           = stepfun(Ea,Srz,e);
 Ea                = w4.*Srz + (1-w4).*Ea;
+%channel evaporation equals max, unless there is not enough Sx
+Ea(Nc-Nr+1:Nc)    = min(Ep,Sx((Nc-Nr+1:Nc)));
 %update surface excess storage available for routing
-Sx                = Sx - Srz ;   
+Sx                = Sx - Srz ;  
 %total available storage in the subsurface (saturated + unsaturated)
 SD                = Hmax-Su-Sw;
 %in case of no infiltration excess, give all you can to the subsurface
@@ -226,45 +222,3 @@ pQ(1:SpinUp)     = [];
 %--------------------------------------------------------------------------
 %KlingGupta Efficiency
 KGE = 1-sqrt( (corr(pQ,oQ)-1).^2 + (std(pQ)./std(oQ)-1).^2 + (mean(pQ)./mean(oQ)-1).^2 );
-%**************************************************************************
-function [massErr]=massError(t,Nc,Smax,ep,V,pQ,FDR,FET,AREA,area,SpinUp)
-%machine precision
-e                = 1e-64;
-%exclude Spin-up period from evaluaiton
-t(1:SpinUp)      = [];
-V(1:SpinUp,:)    = [];
-pQ(1:SpinUp)     = [];
-%--------------------------------------------------------------------------
-%data timestep 
-dTime=t(2)-t(1);
-%--------------------------------------------------------------------------
-%interpolate rainfall intensity based on solver time
-Rn               = FDR(t);   Rn(Rn<e) = e;
-%calculate volume of rain [m3]
-RnT              = Rn*AREA*dTime;
-%--------------------------------------------------------------------------
-%interpolate potential evapotranspiration rate
-ET               = FET(t);   ET(ET<e) = e;
-Ep               = ep.*ET;
-%amount of surface water
-Sx               = V(:,1:Nc);
-%calulate rootzone storage available for evapo-transpiration
-w3                = stepfun(Sx,Smax,e);
-Srz               = w3.*Smax + (1-w3).*Sx;
-%calculate actual evapo-transpiration
-Ea                = Ep.*Srz./(Smax);
-[w4,Ea]           = stepfun(Ea,Srz,e);
-Ea                = w4.*Srz + (1-w4).*Ea;
-%calculate total Ea across the catchment in each timestep
-EaT               = sum(area'.*Ea*AREA*dTime,2);
-%--------------------------------------------------------------------------
-%calculate total storage across the catchment in each timestep
-A                 = [area;area;area]'*AREA;
-ST                = sum(A.*V,2);
-%--------------------------------------------------------------------------
-%mass balance in each timestep as a percentage of total rain
-%*** |dS - r + Ea + Q| = 0 in each timestep ***
-err              = abs(ST-ST(1)- cumsum(RnT) + cumsum(EaT) + cumsum(pQ*dTime));
-ERR              = err./(sum(RnT(:))+1)*100;
-%error at the end of simulation
-massErr          = ERR(end);
