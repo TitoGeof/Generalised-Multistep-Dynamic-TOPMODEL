@@ -156,8 +156,10 @@ Srz               = w3.*Smax + (1-w3).*Sx;
 Ea                = Ep.*Srz./(Smax + eps);
 [w4,Ea]           = stepfun(Ea,Srz,e);
 Ea                = w4.*Srz + (1-w4).*Ea;
-%channel evaporation equals max, unless there is not enough Sx
-Ea(Nc-Nr+1:Nc)    = min(Ep,Sx((Nc-Nr+1:Nc)));
+%estimate open-pan evaporation for channels
+opE               = Ep/0.75;
+%channel evaporation equals open-pan, unless there is not enough Sx
+Ea(Nc-Nr+1:Nc)    = min(opE,Sx((Nc-Nr+1:Nc)));
 %update surface excess storage available for routing
 Sx                = Sx - Srz ;  
 %total available storage in the subsurface (saturated + unsaturated)
