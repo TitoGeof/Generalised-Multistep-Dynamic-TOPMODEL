@@ -10,15 +10,12 @@ dTime                = t(2)-t(1);
 SpinUp               = SpinUp*(24*60*60/dTime);
 %--------------------------------------------------------------------------
 %load uncertain/input model parameters
-[d,Tmax,ep,Srzmax,mannNhs,mannNch,Hmax] = unPack_uncertain_parameters(params);
+[d,Tmax,ep,Smax,mannNhs,mannNch,Hmax] = unPack_uncertain_parameters(params);
 %initialise system
 [Sx0,Su0,Sw0]        = initialiseSYS(Nc);
 %assemble manning's n coefficient for hillslope vs channel classes
 mannN                = 0*Sx0 + mannNhs;           %hillslope
 mannN(Nc-Nr+1:Nc)    = mannNch;                   %channels
-%assemble max root zone storage (channel doesn't have rootzone)
-Smax                = 0*Sx0 + Srzmax;     
-Smax(Nc-Nr+1:Nc)    = 1e-8;
 %--------------------------------------------------------------------------
 %annual daily average evapo-transpiration rate [m/s]
 ET                   = seasonal_sinewave_evap(DT0,1,dTime,(1:length(obsR))');
@@ -61,7 +58,7 @@ qb                   = SINa(Nc).*T./cs;
 qb(qb>Sw)            = Sw(qb>Sw);
 qb                   = area(Nc).*qb*AREA;
 %overland storage
-Sx                   = Sx -Smax(Nc);
+Sx                   = Sx -Smax;
 Sx(Sx<0)             = 0;
 %hydraulic radius for channel class
 Ss                   = Sx./cW(Nc)*cs;
@@ -120,7 +117,7 @@ Su               = Su - quz;
 %                    water table inflows and outflows
 %--------------------------------------------------------------------------
 %subsurface power-law transmissivity profile
-T                = Tmax.*(Sw./Hmax).^d;
+T                = Tmax.*(Sw./(Hmax+e)).^d;
 %subsurface diffusion
 dSwi             = repmat(Sw',Nc,1)-Sw;
 dSwdx            = sum(D.*dSwi,2)/cs;
@@ -154,13 +151,9 @@ qv                = w2.*Su+(1-w2).*qv;
 %calculate actual evapo-transpiration
 w3                = stepfun(Sx,Smax,e);
 Srz               = w3.*Smax + (1-w3).*Sx;
-Ea                = Ep.*Srz./(Smax + eps);
+Ea                = Ep.*Srz./(Smax + e);
 [w4,Ea]           = stepfun(Ea,Srz,e);
 Ea                = w4.*Srz + (1-w4).*Ea;
-%estimate open-pan evaporation for channels
-opE               = Ep/0.75;
-%channel evaporation equals open-pan, unless there is not enough Sx
-Ea(Nc-Nr+1:Nc)    = min(opE,Sx((Nc-Nr+1:Nc)));
 %update surface excess storage available for routing
 Sx                = Sx - Srz ;  
 %total available storage in the subsurface (saturated + unsaturated)
