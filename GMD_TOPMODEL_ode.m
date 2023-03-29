@@ -50,8 +50,8 @@ if size(V,1)<Nobs; V = nan(Nobs,3*Nc); end
 %--------------------------------------------------------------------------
 %calculate outlet discharge
 %--------------------------------------------------------------------------
-Sx                   = V(:,Nc);
-Sw                   = V(:,3*Nc);
+Sx                   = real(V(:,Nc));
+Sw                   = real(V(:,3*Nc));
 %calculate base flow
 T                    = Tmax.*(Sw./Hmax).^d;
 qb                   = SINa(Nc).*T./cs;
