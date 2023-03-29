@@ -45,6 +45,8 @@ tic;
                               ,WbmD,WxmU,WbmU,cs,SINa,SINb,COSa,COSb,Tmax,Hmax,Nr,cW,ep);
 simTime              = toc;
 e                    = 1e-64;
+V(V<e)               = e;
+V                    = real(V);
 %in case ode-solver has crashed midway
 if size(V,1)<Nobs; V = nan(Nobs,3*Nc); end
 %--------------------------------------------------------------------------
