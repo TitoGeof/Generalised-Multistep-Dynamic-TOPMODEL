@@ -85,7 +85,7 @@ function dVdt=HydroGEM_ode_fun(t,V,area,d,Nc,Smax,FET,FDR,mannN,D,WxmD...
                               ,WbmD,WxmU,WbmU,cs,SINa,SINb,COSa,COSb,Tmax,Hmax,Nr,cW,ep)    
 %--------------------------------------------------------------------------                                                
 %machine precision
-e                = 1e-64;
+e                = 1e-16;
 %--------------------------------------------------------------------------
 %                          disaggragte variables
 %--------------------------------------------------------------------------
