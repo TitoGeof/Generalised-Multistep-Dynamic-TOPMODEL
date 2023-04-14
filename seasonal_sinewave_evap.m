@@ -14,6 +14,7 @@ dayNum       = datenum(datetime0)-datenum(datetime_ref) + floor(iTime.*dTime/24/
 dayNum       = dayNum-floor(dayNum/365)*365;
 %calculate the fraction based on the day of the year
 dayFrac      = 0.5*(2+sin(2*pi*dayNum/365-3*pi/4));
+dayFrac      = dayFrac./max(dayFrac);
 % %calculate hour of the day
 hr           = HH0+floor(iTime*dTime/60/60);
 % %ensure the hour value is not greater than 24hr
