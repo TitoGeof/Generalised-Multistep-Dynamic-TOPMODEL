@@ -118,6 +118,8 @@ Su               = Su - quz;
 %--------------------------------------------------------------------------
 %                    water table inflows and outflows
 %--------------------------------------------------------------------------
+%for numerical stability ensure positivity
+Sw(Sw<e)          = e;
 %subsurface power-law transmissivity profile
 T                = Tmax.*(Sw./(Hmax+e)).^d;
 %subsurface diffusion
@@ -140,8 +142,6 @@ qbi              = qbiD + qbiU;
 %--------------------------------------------------------------------------
 %                  unsaturated zone inflows and outflows
 %--------------------------------------------------------------------------
-%for numerical stability ensure positivity
-Su(Su<0)          = 0;
 %vertical hydraulic conductivity averaged across unsaturated zone's thickness
 Kbar              = Su.*(Tmax-T)./(Hu+e).^2;
 %total vertical flow based on Richard's type Equation
