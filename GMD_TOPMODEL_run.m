@@ -138,7 +138,7 @@ plot(DT,predQ,'k:','linewidth',1.5)
 plot(DT,Qfrac.*predQ,'r-')
 plot([DT(SpinUp) DT(SpinUp)],[min(Qfrac.*predQ) max(obsQ)*100],'m--','linewidth',1)
 ylabel(haxes1(1),'Q [m^3/s]','color','k');
-ylim(haxes1(1),[min(Qfrac.*predQ) max(obsQ)*1.5]);
+ylim(haxes1(1),[1e-6 max(obsQ)*1.5]);
 xlim(haxes1(1),[min(DT) max(DT)]);
 set(hline1(1),'FaceColor','c','EdgeColor','c');
 set(haxes1(1),'YColor','k')
