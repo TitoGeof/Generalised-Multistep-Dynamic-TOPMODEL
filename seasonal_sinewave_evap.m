@@ -13,12 +13,10 @@ dayNum       = datenum(datetime0)-datenum(datetime_ref) + floor(iTime.*dTime/24/
 %ensure dayNum is not greater than 365
 dayNum       = dayNum-floor(dayNum/365)*365;
 %calculate the fraction based on the day of the year
-dayFrac      = 0.5*(2+sin(2*pi*dayNum/365-3*pi/4));
-dayFrac      = dayFrac./max(dayFrac);
-% %calculate hour of the day
+dayFrac      = 0.5*(2+sin(2*pi*dayNum/365-3*pi/5));  dayFrac=dayFrac./max(dayFrac);
+%calculate hour of the day
 hr           = HH0+floor(iTime*dTime/60/60);
-% %ensure the hour value is not greater than 24hr
+%ensure the hour value is not greater than 24hr
 hr           = hr-floor(hr/24)*24;
-hrFrac       = 0.5*(2+sin(2*pi*hr/24-pi/2));
-hrFrac       = hrFrac./max(hrFrac);
-Ep           = Ep0*dayFrac.*hrFrac;
+hrFrac       = 0.5*(2+sin(2*pi*hr/24-pi/2));         hrFrac=hrFrac./max(hrFrac);
+Ep           = Ep0.*hrFrac.*dayFrac;
