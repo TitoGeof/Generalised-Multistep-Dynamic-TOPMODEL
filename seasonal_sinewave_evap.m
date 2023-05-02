@@ -5,7 +5,7 @@ mm0          = yyyymmddHH(2);
 dd0          = yyyymmddHH(3);
 HH0          = yyyymmddHH(4);
 %define the starting timedate
-datetime0    = datetime(yyyy0,mm0,dd0);
+datetime0    = datetime(yyyy0,mm0,dd0,HH0,0,0);
 %define 1st of january at 00:00:00 of that year as the reference datetime
 datetime_ref = datetime(yyyy0,01,01);
 %calculate the number of days from the reference datetime
