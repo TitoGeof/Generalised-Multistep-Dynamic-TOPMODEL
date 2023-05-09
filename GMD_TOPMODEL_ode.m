@@ -10,9 +10,9 @@ dTime                = t(2)-t(1);
 SpinUp               = SpinUp*(24*60*60/dTime);
 %--------------------------------------------------------------------------
 %load uncertain/input model parameters
-[d,Tmax,ep,Smax,mannNhs,mannNch,Hmax] = unPack_uncertain_parameters(params);
+[d,Tmax,ep,Smax,mannNhs,mannNch,phi] = unPack_uncertain_parameters(params);
 %initialise system
-[Sx0,Su0,Sw0]        = initialiseSYS(Nc);
+[Sx0,Su0,Sw0,Hmax]        = initialiseSYS(Nc,phi,d);
 %assemble manning's n coefficient for hillslope vs channel classes
 mannN                = 0*Sx0 + mannNhs;           %hillslope
 mannN(Nc-Nr+1:Nc)    = mannNch;                   %channels
@@ -52,8 +52,8 @@ if size(V,1)<Nobs; V = nan(Nobs,3*Nc); end
 %--------------------------------------------------------------------------
 %calculate outlet discharge
 %--------------------------------------------------------------------------
-Sx                   = real(V(:,Nc));
-Sw                   = real(V(:,3*Nc));
+Sx                   = V(:,Nc);
+Sw                   = V(:,3*Nc);
 %calculate base flow
 T                    = Tmax.*(Sw./Hmax).^d;
 qb                   = SINa(Nc).*T./cs;
@@ -87,7 +87,7 @@ function dVdt=HydroGEM_ode_fun(t,V,area,d,Nc,Smax,FET,FDR,mannN,D,WxmD...
                               ,WbmD,WxmU,WbmU,cs,SINa,SINb,COSa,COSb,Tmax,Hmax,Nr,cW,ep)    
 %--------------------------------------------------------------------------                                                
 %machine precision
-e                = 1e-16;
+e                = 1e-64;
 %--------------------------------------------------------------------------
 %                          disaggragte variables
 %--------------------------------------------------------------------------
@@ -119,7 +119,7 @@ Su               = Su - quz;
 %                    water table inflows and outflows
 %--------------------------------------------------------------------------
 %for numerical stability ensure positivity
-Sw(Sw<e)          = e;
+Sw(Sw<0)          = 0;
 %subsurface power-law transmissivity profile
 T                = Tmax.*(Sw./(Hmax+e)).^d;
 %subsurface diffusion
