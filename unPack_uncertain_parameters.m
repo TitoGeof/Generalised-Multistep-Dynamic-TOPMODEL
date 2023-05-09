@@ -1,5 +1,5 @@
 %**************************************************************************
-function [d,Tmax,ep,Smax,mannNhs,mannNch,Hmax]=unPack_uncertain_parameters(params)
+function [d,Tmax,ep,Smax,mannNhs,mannNch,phi]=unPack_uncertain_parameters(params)
 %--------------------------------------------------------------------------
 %                          uncertain (calibration) parameters
 %--------------------------------------------------------------------------
@@ -17,6 +17,6 @@ Smax    = params(4);
 mannNhs = params(5);
 %Manning's n coefficient for channel
 mannNch = params(6);
-%average max subsurface storage [m]
-Hmax    = params(7);
+%effective subsurface storage/porosity, phi [m]
+phi    = params(7);
 
