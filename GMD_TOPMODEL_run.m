@@ -46,19 +46,19 @@ SpinUp       = 10; %a 'warm-up' period (predictions discarded here)
 %                 input model parameters (need calibration)
 %--------------------------------------------------------------------------
 %exponential decay parameter, d [m]
-PARAMset(1)  = 15;
+PARAMset(1)  = 8e5;
 %maximum transmissivity (at saturation), Tmax [m2/s]
-PARAMset(2)  = 2e-4;
+PARAMset(2)  = 0.0029;
 %maximum daily evaporation rate, averaged across a year, ep [m/day]
-PARAMset(3)  = 0.006;
+PARAMset(3)  = 0.0089;
 %maximum root-zone storage, Smax [m]
-PARAMset(4)  = 0.003;
+PARAMset(4)  = 0.012;
 %hilslope Manning's n_{hs} [s/m^(1/3)] 
-PARAMset(5)  = 1;
+PARAMset(5)  = 0.05;
 %channels Manning's n_{ch} [s/m^(1/3)]
 PARAMset(6)  = 0.5;
 %effective subsurface storage/porosity, phi [m]
-PARAMset(7)  = 0.005;
+PARAMset(7)  = 4e-04;
 %--------------------------------------------------------------------------
 %                  read catchment rainfall and discharg data
 %--------------------------------------------------------------------------
