@@ -57,8 +57,8 @@ PARAMset(4)  = 0.003;
 PARAMset(5)  = 1;
 %channels Manning's n_{ch} [s/m^(1/3)]
 PARAMset(6)  = 0.5;
-%average max subsurface storage, Hmax [m]
-PARAMset(7)  = 0.002;
+%effective subsurface storage/porosity, phi [m]
+PARAMset(7)  = 0.005;
 %--------------------------------------------------------------------------
 %                  read catchment rainfall and discharg data
 %--------------------------------------------------------------------------
