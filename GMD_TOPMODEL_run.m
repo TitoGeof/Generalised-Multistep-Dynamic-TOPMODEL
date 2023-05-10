@@ -46,7 +46,7 @@ SpinUp       = 10; %a 'warm-up' period (predictions discarded here)
 %                 input model parameters (need calibration)
 %--------------------------------------------------------------------------
 %exponential decay parameter, d [m]
-PARAMset(1)  = 5e5;
+PARAMset(1)  = 7;
 %maximum transmissivity (at saturation), Tmax [m2/s]
 PARAMset(2)  = 0.00005;
 %maximum daily evaporation rate, averaged across a year, ep [m/day]
@@ -88,6 +88,8 @@ load([pwd '\DATA\' 'obsData' catchname],'DT','obsQ','DTR','obsR','yyyymmddHH0');
 NAME = [catchname num2str(Href) '_' num2str(Athresh) 'DEM_PRE_PROCESS'];
 save([pwd '\DATA\' NAME '.mat'],'areaf','AREA','WxmD','WxmU','WbmD','WbmU','SINa','SINb','COSa','COSb','cs','TPIND','Nr','Nc','DEM','D','cW')
 load([pwd '\DATA\' NAME '.mat'],'areaf','AREA','WxmD','WxmU','WbmD','WbmU','SINa','SINb','COSa','COSb','cs','TPIND','Nr','Nc','DEM','D','cW')
+%estimate parameter ranges for calibration based on observed rainfall-discharge mass balance
+estimate_parameter_ranges(DT,obsQ,obsR,AREA,cs,SINb);
 %--------------------------------------------------------------------------
 %                              run GMD-TOPMODEL 
 %--------------------------------------------------------------------------
@@ -151,3 +153,42 @@ set(hline2,'FaceColor','b','EdgeColor','b');
 set(gca,'yscale','log')
 xlabel(haxes1(1),'Time [day]','color','k');
 linkaxes([hh1 hh2],'x')
+%**************************************************************************
+function estimate_parameter_ranges(DT,obsQ,obsR,AREA,cs,SINb)
+%this function estimates model parameter ranges based on observed 
+%rainfall-discharge mass balance. Note that the ranges provided by this
+%function are just guide values. You can run a coarse (e.g., 5k) calibration
+%with these ranges and then refine ranges based on best KGE performance before
+%the main calibration run using e.g., 20k, 50k, or 100k parameter-sets.
+%--------------------------------------------------------------------------
+%inputs:
+%DT:time vector in seconds
+%observed discharge [m^3/s]
+%observed rainfall [m]
+%catchment area [m^2]
+%cs: DEM grid resolution [m]
+%SINb:
+%timestep
+dTime               = DT(2)-DT(1);
+%movsum
+numDays             = 7;
+window              = 60*60*24*numDays./dTime;
+cR                  = movsum(obsR,window);
+cQ                  = movsum(obsQ*dTime,window)/AREA;
+%estimates
+ep                  = 2*max(cR-cQ)/numDays;
+phi                 = max(cR-cQ);
+Srzmax              = max(cR-cQ);
+TMAX                = max(obsQ)/AREA*cs/min(SINb);
+%--------------------------------------------------------------------------
+disp('-------------------------------------------------------')
+disp(['*** suggested calibration ranges for your catchment ***'])
+disp('-------------------------------------------------------')
+disp(['d      :     ' num2str(1) '   -   ' num2str(10) '        [m]'])
+disp(['Tmax   : ' num2str(1e-8)  '   -   ' num2str(TMAX) ' [m/s]'])
+disp(['ep     : ' num2str(1e-8)  '   -   ' num2str(ep) ' [m/day]'])
+disp(['SrzMax : ' num2str(1e-8)  '   -   ' num2str(Srzmax) '   [m]'])
+disp(['nhs    : ' num2str(1e-8)  '   -   ' '100' '       [s/m^(1/3)]'])
+disp(['nch    : ' num2str(1e-8)  '   -   ' '10' '        [s/m^(1/3)]'])
+disp(['phi    : ' num2str(1e-8)  '   -   ' num2str(phi) '   [m]'])
+disp('-------------------------------------------------------')
