@@ -43,7 +43,7 @@ M3(M1==1)            = 1;
 JPAT                 = [M2 M1 M1; M1 M1 M1; M1 M1 M3];      
 %--------------------------------------------------------------------------
 %ode-solver Options
-OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',1e-6,'RelTol',1e-3);
+OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',1e-6,'RelTol',1e-6);
 %solve using ode15s, suitable for "stiff" system if equations
 tic;
 [~,V]                = ode15s(@HydroGEM_ode_fun,t,V0,OPS,area,d,Nc,Smax,FET,FDR,mannN,D,WxmD...
