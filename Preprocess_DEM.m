@@ -37,9 +37,10 @@ Axm                  = flowacc(FDxm);
 GRADx                = gradient(FDxm,DEMx);
 %convert to degrees 
 betaD                = atand(GRADx.Z);
-%average downslope cell angles [degrees]. Minimum is set to 0.01 of a degree
-betaD                = betaD + 0.01;
-betaD(isnan(DEMx.Z)) = NaN;
+%average downslope cell angles [degrees]. Minimum is set to 0.1 of a degree
+NOISE                = rand(size(betaD));
+NOISE(isnan(DEMx.Z)) = NaN;
+betaD                = betaD + NOISE;
 %--------------------------------------------------------------------------
 %                    subsurface hydraulic gradient 
 %--------------------------------------------------------------------------
@@ -96,8 +97,6 @@ areaUp               = Axs.*cs;
 %Tpographic Wetness Index (TI)
 TpInd                = log(areaUp./sind(alphaD)+eps);
 TpInd(isnan(DEMx.Z)) = NaN;
-MAX                  = max(TpInd(:));
-TpInd(betaD<=0.01)   = MAX;
 %--------------------------------------------------------------------------
 %                   delineate Hydrologically Similar Units (HSUs) 
 %--------------------------------------------------------------------------
