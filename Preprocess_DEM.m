@@ -10,8 +10,6 @@ DEMx                 = GRIDobj([pwd '\DATA\' catchname 'dem.tif']);
 DEMx.Z               = double(DEMx.Z);
 %burn the channel network into DEM
 DEMx                 = burn_channel_network(DEMx,cs,CHthresh);
-%fill the sinks 
-DEMx                 = fillsinks(DEMx);
 %turn the DEM inside out to calculate upslope adjacency matrix later
 DEMxi                = Invert_DEM(DEMx);
 %--------------------------------------------------------------------------
