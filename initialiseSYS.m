@@ -1,7 +1,5 @@
 %**************************************************************************
-function [Sx,Su,Sw,Hmax]=initialiseSYS(Nc,phi,d)
-%maximum subsurface storage
-Hmax  = phi*d;
+function [Sx,Su,Sw]=initialiseSYS(Nc,Hmax)
 %--------------------------------------------------------------------------
 %                            initialise variables
 %--------------------------------------------------------------------------
