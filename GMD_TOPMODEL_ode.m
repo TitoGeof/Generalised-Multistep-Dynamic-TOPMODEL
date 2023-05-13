@@ -9,10 +9,15 @@ dTime                = t(2)-t(1);
 %define spin up in terms of data timestep
 SpinUp               = SpinUp*(24*60*60/dTime);
 %--------------------------------------------------------------------------
+%estimate max subsurface storage from observed data mass balance
+cR                  = cumsum(obsR);
+cQ                  = cumsum(obsQ*dTime)/AREA;
+Hmax                = max(cR-cQ);
+%--------------------------------------------------------------------------
 %load uncertain/input model parameters
-[d,Tmax,ep,Smax,mannNhs,mannNch,phi] = unPack_uncertain_parameters(params);
+[d,Tmax,ep,Smax,mannNhs,mannNch] = unPack_uncertain_parameters(params);
 %initialise system
-[Sx0,Su0,Sw0,Hmax]        = initialiseSYS(Nc,phi,d);
+[Sx0,Su0,Sw0]        = initialiseSYS(Nc,Hmax);
 %assemble manning's n coefficient for hillslope vs channel classes
 mannN                = 0*Sx0 + mannNhs;           %hillslope
 mannN(Nc-Nr+1:Nc)    = mannNch;                   %channels
