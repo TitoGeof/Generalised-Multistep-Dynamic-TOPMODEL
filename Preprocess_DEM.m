@@ -35,10 +35,8 @@ Axm                  = flowacc(FDxm);
 GRADx                = gradient(FDxm,DEMx);
 %convert to degrees 
 betaD                = atand(GRADx.Z);
-%average downslope cell angles [degrees]. Minimum is set to 0.1 of a degree
-NOISE                = rand(size(betaD));
-NOISE(isnan(DEMx.Z)) = NaN;
-betaD                = betaD + NOISE;
+%average downslope cell angles [degrees]. Minimum is set to 1 degree
+betaD                = betaD + 1;
 %--------------------------------------------------------------------------
 %                    subsurface hydraulic gradient 
 %--------------------------------------------------------------------------
@@ -205,7 +203,7 @@ end
 R        = R.*Btemp;
 %define outlet
 [~,ixx]       = sort(As(:),'descend');
-outlet        = ixx(1:3);
+outlet        = ixx(1:1);
 %exclude outlet from reach map
 R(outlet)     = NaN;
 %reshuffle to be from 1:NR
