@@ -57,6 +57,7 @@ if size(V,1)<Nobs; V = nan(Nobs,3*Nc); end
 Sx                   = V(:,Nc);
 Sw                   = V(:,3*Nc);
 %calculate base flow
+Sw(Sw<0)             = 0;
 T                    = Tmax.*(Sw./Hmax).^d;
 qb                   = SINa(Nc).*T./cs;
 qb(qb>Sw)            = Sw(qb>Sw);
@@ -172,6 +173,7 @@ qx                = w5.*SD + (1-w5).*Sx;
 %--------------------------------------------------------------------------
 %                       surface inflows and outflows
 %--------------------------------------------------------------------------
+Sx(Sx<0)             = 0;
 %scale surface excess to acount for variable channel width (only in channel HSUs)
 %hilslope cW is set equal to cs, so no scaling occurs there
 Ss                = Sx*cs./cW;
