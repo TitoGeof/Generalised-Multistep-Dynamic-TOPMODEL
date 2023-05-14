@@ -53,14 +53,14 @@ if strcmp(DIFFUSION,'on')
   save([pwd '\DATA\' catchname '_alpha_e_ic_icd_downslope' '_' num2str(Href) 'm.mat'],'alphaD','eD','icD','icdD')
   load([pwd '\DATA\' catchname '_alpha_e_ic_icd_downslope' '_' num2str(Href) 'm.mat'],'alphaD','eD','icD','icdD')
   %avoid zeros
-  alphaD               = alphaD + 0.1;
+  alphaD               = alphaD + 1;
   %multiple flow direction flow matrix for subsurface in downslope direction
   MbmD                 = flowdir_sub(DEMx,icD,icdD,eD);
   %subaurfce gtradient in upslope direction
   [alphaU,eU,icU,icdU] = phreatic_surface_slope_M8(DEMxi,cs,Href);
   save([pwd '\DATA\' catchname '_alpha_e_ic_icd_upslope' '_' num2str(Href) 'm.mat'],'alphaU','eU','icU','icdU')
   load([pwd '\DATA\' catchname '_alpha_e_ic_icd_upslope' '_' num2str(Href) 'm.mat'],'alphaU','eU','icU','icdU')
-  alphaU               = alphaU + 0.1;
+  alphaU               = alphaU + 1;
   %multiple flow direction flow matrix for subsurface in upslope direction
   MbmU                 = flowdir_sub_inverse(DEMxi,icD,icdD,eD);
 else
