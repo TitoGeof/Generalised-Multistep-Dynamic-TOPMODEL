@@ -45,12 +45,12 @@ SpinUp       = 10; %a 'warm-up' period (predictions discarded here)
 %--------------------------------------------------------------------------
 %                 input model parameters (need calibration)
 %--------------------------------------------------------------------------
-%exponential decay parameter, d [m]
-PARAMset(1)  = 500;
+%effective frainable porosity, phi, [m]
+PARAMset(1)  = 4e-3;
 %maximum transmissivity (at saturation), Tmax [m2/s]
-PARAMset(2)  = 0.00005;
+PARAMset(2)  = 3e-4;
 %maximum daily evaporation rate, averaged across a year, ep [m/day]
-PARAMset(3)  = 0.008;
+PARAMset(3)  = 0.0037;
 %maximum root-zone storage, Smax [m]
 PARAMset(4)  = 0.01;
 %hilslope Manning's n_{hs} [s/m^(1/3)] 
