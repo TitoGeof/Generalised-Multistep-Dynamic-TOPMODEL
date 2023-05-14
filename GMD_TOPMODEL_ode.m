@@ -10,9 +10,7 @@ dTime                = t(2)-t(1);
 SpinUp               = SpinUp*(24*60*60/dTime);
 %--------------------------------------------------------------------------
 %load uncertain/input model parameters
-[phi,Tmax,ep,Smax,mannNhs,mannNch] = unPack_uncertain_parameters(params);
-%exponential decay of conductivity with depth, d [m]
-d                    = 10; %d=10 is roughly equivalent to exponential decay
+[phi,Tmax,ep,Smax,mannNhs,mannNch,d] = unPack_uncertain_parameters(params);
 %max subsurface storage, Hmax [m]
 Hmax                 = d*phi;
 %initialise system
