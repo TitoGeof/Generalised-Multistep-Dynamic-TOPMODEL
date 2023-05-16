@@ -10,7 +10,7 @@ dTime                = t(2)-t(1);
 SpinUp               = SpinUp*(24*60*60/dTime);
 %--------------------------------------------------------------------------
 %load uncertain/input model parameters
-[phi,Tmax,ep,Smax,mannNhs,mannNch,d] = unPack_uncertain_parameters(params);
+[d,Tmax,phi,ep,Smax,mannNhs,mannNch] = unPack_uncertain_parameters(params);
 %max subsurface storage, Hmax [m]
 Hmax                 = d*phi;
 %initialise system
@@ -24,7 +24,7 @@ ET                   = seasonal_sinewave_evap(DT0,1,dTime,(1:length(obsR))');
 %convert total rainfal (e.g., from tipping bucket) to rainfall intensity [m/s]
 drdt                 = obsR./dTime;
 %define method of interpolation
-METHOD               = 'pchip';
+METHOD               = 'linear';
 %create gridded interpolation
 FDR                  = griddedInterpolant(t,drdt,METHOD);
 FET                  = griddedInterpolant(t,ET  ,METHOD);
@@ -40,7 +40,7 @@ M3(M1==1)            = 1;
 JPAT                 = [M2 M1 M1; M1 M1 M1; M1 M1 M3];      
 %--------------------------------------------------------------------------
 %ode-solver Options
-OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',1e-6,'RelTol',1e-6);
+OPS                  = odeset('JPattern',JPAT,'InitialStep',1e-64,'AbsTol',1e-7,'RelTol',1e-4);
 %solve using ode15s, suitable for "stiff" system if equations
 tic;
 [~,V]                = ode15s(@HydroGEM_ode_fun,t,V0,OPS,area,d,Nc,Smax,FET,FDR,mannN,D,WxmD...
