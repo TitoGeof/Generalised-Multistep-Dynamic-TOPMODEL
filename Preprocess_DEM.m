@@ -1,5 +1,5 @@
 function [WxmD,WxmU,WbmD,WbmU,D,SINa,SINb,COSa,COSb,areaf,AREA,Nc,Nr,HSUs...
-           ,cs,DEMx,cW]=Preprocess_DEM(catchname,CHthresh,Href,Athresh,cs,ISOBASINS,DIFFUSION,TI_bins,outletW)
+           ,cs,DEMx,cW]=Preprocess_DEM(catchname,CHthresh,Href,Athresh,cs,ISOBASINS,DIFFUSION,nClass,outletW,power)
 warning('off','all');
 %--------------------------------------------------------------------------
 %                                 load DEM 
@@ -35,8 +35,8 @@ Axm                  = flowacc(FDxm);
 GRADx                = gradient(FDxm,DEMx);
 %convert to degrees 
 betaD                = atand(GRADx.Z);
-%average downslope cell angles [degrees]. Minimum is set to 1 degree
-betaD                = betaD + 1;
+%average downslope cell angles [degrees]. Minimum is set to 0.1 degree
+betaD                = betaD + 0.1;
 %--------------------------------------------------------------------------
 %                    subsurface hydraulic gradient 
 %--------------------------------------------------------------------------
@@ -53,14 +53,14 @@ if strcmp(DIFFUSION,'on')
   save([pwd '\DATA\' catchname '_alpha_e_ic_icd_downslope' '_' num2str(Href) 'm.mat'],'alphaD','eD','icD','icdD')
   load([pwd '\DATA\' catchname '_alpha_e_ic_icd_downslope' '_' num2str(Href) 'm.mat'],'alphaD','eD','icD','icdD')
   %avoid zeros
-  alphaD               = alphaD + 1;
+  alphaD               = alphaD + 0.1;
   %multiple flow direction flow matrix for subsurface in downslope direction
   MbmD                 = flowdir_sub(DEMx,icD,icdD,eD);
   %subaurfce gtradient in upslope direction
   [alphaU,eU,icU,icdU] = phreatic_surface_slope_M8(DEMxi,cs,Href);
   save([pwd '\DATA\' catchname '_alpha_e_ic_icd_upslope' '_' num2str(Href) 'm.mat'],'alphaU','eU','icU','icdU')
   load([pwd '\DATA\' catchname '_alpha_e_ic_icd_upslope' '_' num2str(Href) 'm.mat'],'alphaU','eU','icU','icdU')
-  alphaU               = alphaU + 1;
+  alphaU               = alphaU + 0.1;
   %multiple flow direction flow matrix for subsurface in upslope direction
   MbmU                 = flowdir_sub_inverse(DEMxi,icD,icdD,eD);
 else
@@ -91,8 +91,10 @@ end
 %upslope contributing area per unit contour length [m]
 areaUp               = Axs.*cs;
 %Tpographic Wetness Index (TI)
-TpInd                = log(areaUp./sind(alphaD)+eps);
+TpInd                = (areaUp./sind(alphaD)+eps).^(1/power);
 TpInd(isnan(DEMx.Z)) = NaN;
+%TI bins
+TI_bins              = linspace(min(TpInd(:)),max(TpInd(:)),nClass);       
 %--------------------------------------------------------------------------
 %                   delineate Hydrologically Similar Units (HSUs) 
 %--------------------------------------------------------------------------
