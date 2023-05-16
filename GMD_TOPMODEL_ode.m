@@ -203,7 +203,7 @@ qoi               = qoiD + qoiU;
 %--------------------------------------------------------------------------
 dSxdt             = qoi - qo - qx + quz + qwt + Rn - Ea; %surface storage
 dSudt             = qx  - qv - quz;                      %unsaturated zone 
-dSwdt             = qbi - qb + qv - qwt;                 %subsurface storage
+dSwdt             = qbi - qb + qv - qwt;                 %saturated zone
 %aggregate derivatives for the ODE-solver
 dVdt              = [dSxdt;dSudt;dSwdt];
 %**************************************************************************
