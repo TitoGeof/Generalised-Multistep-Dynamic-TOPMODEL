@@ -22,9 +22,8 @@ Href        = 0.5; %reference head-drop along flow path path [m] (for calculatin
 %subsurface hydraulic gradient) it is catchment-specific. Refer to the model
 %jouranl article for more info.
 %--------------------------------------------------------------------------
-%Topographic Index (TI) bin edges (define based on your catchment's
-%topographic characteristics, or your particular application)
-TI_bins      = [0;4;8;12;1e64];
+%number Topographic Index (TI) classes
+nClass       = 7;
 %--------------------------------------------------------------------------
 ISOBASINS    = 'on';   % 'on' or 'off'. if 'off' discretisation is done based only on
 %Topographic Index (TI), if 'on'`, discretisation is done by the combination of TI
@@ -45,18 +44,20 @@ SpinUp       = 10; %a 'warm-up' period (predictions discarded here)
 %--------------------------------------------------------------------------
 %                 input model parameters (need calibration)
 %--------------------------------------------------------------------------
-%effective frainable porosity, phi, [m]
-PARAMset(1)  = 4e-3;
+%power law exponent of conductivity decay with depth, d, [m]
+PARAMset(1)  = 8;
 %maximum transmissivity (at saturation), Tmax [m2/s]
 PARAMset(2)  = 3e-4;
+%effective frainable porosity, phi, [m]
+PARAMset(3)  = 4e-3;
 %maximum daily evaporation rate, averaged across a year, ep [m/day]
-PARAMset(3)  = 0.0037;
+PARAMset(4)  = 0.0037;
 %maximum root-zone storage, Smax [m]
-PARAMset(4)  = 0.01;
+PARAMset(5)  = 0.01;
 %hilslope Manning's n_{hs} [s/m^(1/3)] 
-PARAMset(5)  = 1;
+PARAMset(6)  = 1;
 %channels Manning's n_{ch} [s/m^(1/3)]
-PARAMset(6)  = 0.5;
+PARAMset(7)  = 0.5;
 %--------------------------------------------------------------------------
 %                  read catchment rainfall and discharg data
 %--------------------------------------------------------------------------
@@ -81,9 +82,9 @@ load([pwd '\DATA\' 'obsData' catchname],'DT','obsQ','DTR','obsR','yyyymmddHH0');
 %are turned 'on'. After that, load values from disk for future simulations of you catchment.
 
 [WxmD,WxmU,WbmD,WbmU,D,SINa,SINb,COSa,COSb,areaf,AREA,Nc,Nr,TPIND,cs,DEM,cW]...
-     =Preprocess_DEM(catchname,CHthresh,Href,Athresh,cs,ISOBASINS,DIFFUSION,TI_bins,outletW);
+     =Preprocess_DEM(catchname,CHthresh,Href,Athresh,cs,ISOBASINS,DIFFUSION,nClass,outletW,PARAMset(1));
 
-NAME = [catchname num2str(Href) '_' num2str(Athresh) 'DEM_PRE_PROCESS'];
+NAME = [catchname num2str(Href) '_' num2str(Athresh) 'DEM_PRE_PROCESS' '_d=' num2str(PARAMset(1))];
 save([pwd '\DATA\' NAME '.mat'],'areaf','AREA','WxmD','WxmU','WbmD','WbmU','SINa','SINb','COSa','COSb','cs','TPIND','Nr','Nc','DEM','D','cW')
 load([pwd '\DATA\' NAME '.mat'],'areaf','AREA','WxmD','WxmU','WbmD','WbmU','SINa','SINb','COSa','COSb','cs','TPIND','Nr','Nc','DEM','D','cW')
 %--------------------------------------------------------------------------
